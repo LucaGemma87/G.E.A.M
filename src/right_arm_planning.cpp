@@ -163,9 +163,6 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
   	  start_pose.position.x = position_wrist_home[0];
   	  start_pose.position.y = position_wrist_home[1];
   	  start_pose.position.z = position_wrist_home[2];
-
-     
-      
       // Receving desiderate position
       des_position=request.goal.des_pose;
 
@@ -331,7 +328,7 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
     ROS_INFO("Setting joint value target done");
     group.setJointValueTarget(group_variable_values);
     //sleep(5.0);
-    
+     group.move();// questo move group blocca il programma
     response.result=response.SUCCESS;
     response.error = (float)0;
     //group.move();
@@ -343,6 +340,7 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
       display_trajectory.trajectory_start = simple_plan.start_state_;
       display_trajectory.trajectory.push_back(simple_plan.trajectory_);
       right_arm_planning_pub_.publish(display_trajectory);
+     
       //ROS_INFO("First trajectory Point %f",trajectory_controller_msgs.goal.trajectory.points[0]);
      //;
       
@@ -350,10 +348,10 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
      // 00034   , path_tolerance(_alloc)
      // 00035   , goal_tolerance(_alloc)
      // 00036   , goal_time_tolerance()
-      right_arm_planning_controller_pub_.publish(trajectory_controller_msgs);
+      //right_arm_planning_controller_pub_.publish(trajectory_controller_msgs);
    
   }
-  group.move();// questo move group blocca il programma
+  
   ROS_INFO(" All is DONE !!! ");
 }
 
@@ -369,6 +367,9 @@ int main(int argc, char **argv)
  
   grasp_estimator::Right_arm_planner node(nh);
 
-  ros::spin();
+  //ros::spin();
+  ros::AsyncSpinner spinner(8); // Use 4 threads
+  spinner.start();
+  ros::waitForShutdown();
   return 0;
 }

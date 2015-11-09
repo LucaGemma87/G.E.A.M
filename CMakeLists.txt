@@ -142,6 +142,7 @@ include_directories(
 
 add_executable(right_arm_planning_node src/right_arm_planning.cpp)
 add_executable(ping_right_arm_planning_node src/ping_right_arm_planning.cpp)
+add_executable(ping_right_arm_planning_node_home src/ping_right_arm_planning_home.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -149,12 +150,16 @@ add_executable(ping_right_arm_planning_node src/ping_right_arm_planning.cpp)
 
 add_dependencies(right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(ping_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(ping_right_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(right_arm_planning_node 
    ${catkin_LIBRARIES}
   )
  target_link_libraries(ping_right_arm_planning_node 
+   ${catkin_LIBRARIES}
+  )
+  target_link_libraries(ping_right_arm_planning_node_home 
    ${catkin_LIBRARIES}
   )
 
