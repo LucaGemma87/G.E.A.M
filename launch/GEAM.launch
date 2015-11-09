@@ -1,0 +1,7 @@
+<launch>
+
+<node pkg="grasp_estimator" name="right_arm_planning_node" type="right_arm_planning_node" respawn="true" output="screen">
+</node>
+  
+
+</launch>
