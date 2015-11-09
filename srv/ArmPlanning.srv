@@ -1,0 +1,20 @@
+# position arm srv
+#include <lwr_controllers/PoseRPY.h>
+
+#lwr_controllers/PoseRPY poseRPY
+int32 decision
+
+
+Goal goal
+
+---
+
+# Whether the planning has succeeded or failed
+int32 NO_DES_POS_RECEIVED = 1
+int32 DES_POS_BAD_POSE =2
+int32 DES_CHANGE_JOINT_EMPTY = 3
+int32 OTHER_ERROR =4
+int32 SUCCESS = 5
+
+int32 result
+float32 error
