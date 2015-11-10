@@ -7,7 +7,7 @@ project(grasp_estimator)
 find_package(catkin REQUIRED COMPONENTS
   roscpp rospy std_msgs  message_generation tf  gencpp  geneus  genlisp  genpy
   sensor_msgs geometry_msgs shape_msgs visualization_msgs urdf moveit_core moveit_ros_planning 
-  moveit_ros_planning_interface pluginlib moveit_msgs control_msgs
+  moveit_ros_planning_interface pluginlib moveit_msgs control_msgs gazebo_msgs 
 )
 
 
@@ -48,7 +48,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_message_files(
   FILES
    Goal.msg
-
+   DataAcquired.msg
  )
 
 
@@ -57,6 +57,7 @@ add_message_files(
  add_service_files(
     FILES
     ArmPlanning.srv
+    DataAcquiring.srv
 #   Service2.srv
  )
 ## Generate added messages and services with any dependencies listed here
@@ -65,8 +66,9 @@ generate_messages(
  geometry_msgs
  std_msgs
   sensor_msgs
+  gazebo_msgs
   
-)
+ )
 
 
 ## Generate actions in the 'action' folder
@@ -143,6 +145,9 @@ include_directories(
 add_executable(right_arm_planning_node src/right_arm_planning.cpp)
 add_executable(ping_right_arm_planning_node src/ping_right_arm_planning.cpp)
 add_executable(ping_right_arm_planning_node_home src/ping_right_arm_planning_home.cpp)
+add_executable(test_right_arm_planning_node src/test_right_arm_planning.cpp)
+add_executable(data_acquiring_node src/data_acquiring.cpp)
+add_executable(test_data_acquiring src/test_data_acquiring.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -151,18 +156,18 @@ add_executable(ping_right_arm_planning_node_home src/ping_right_arm_planning_hom
 add_dependencies(right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(ping_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(ping_right_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(test_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(test_data_acquiring ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(right_arm_planning_node 
-   ${catkin_LIBRARIES}
-  )
- target_link_libraries(ping_right_arm_planning_node 
-   ${catkin_LIBRARIES}
-  )
-  target_link_libraries(ping_right_arm_planning_node_home 
-   ${catkin_LIBRARIES}
-  )
-
+ target_link_libraries(right_arm_planning_node    ${catkin_LIBRARIES}   )
+ target_link_libraries(ping_right_arm_planning_node  ${catkin_LIBRARIES}  )
+  target_link_libraries(ping_right_arm_planning_node_home  ${catkin_LIBRARIES})
+ target_link_libraries(test_right_arm_planning_node    ${catkin_LIBRARIES})
+  target_link_libraries(data_acquiring_node  ${catkin_LIBRARIES})
+  target_link_libraries(test_data_acquiring  ${catkin_LIBRARIES})
 
 #############
 ## Install ##
