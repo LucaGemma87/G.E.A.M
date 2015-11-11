@@ -1,0 +1,15 @@
+# data node
+
+int32 activation
+
+---
+
+# Whether the planning has succeeded or failed
+int32 SUCCESS = 1
+int32 ERROR_SERVER = 2
+int32 TIME_ERROR =3
+int32 OTHER_ERROR =4
+
+int32 result
+
+DataAcquired data
