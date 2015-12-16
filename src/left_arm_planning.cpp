@@ -48,7 +48,7 @@
 
 namespace grasp_estimator {
 
-class Right_arm_planner
+class Left_arm_planner
 { //typedef pcl::PointXYZ    Point;
  
   private:
@@ -57,12 +57,12 @@ class Right_arm_planner
   //! Node handle in the private namespace
   ros::NodeHandle priv_nh_;
   //! Publisher for markers
-  ros::Publisher right_arm_planning_pub_ ;
+  ros::Publisher left_arm_planning_pub_ ;
   //! Publisher for controller
-  ros::Publisher right_arm_planning_controller_pub_ ;
+  ros::Publisher left_arm_planning_controller_pub_ ;
 
   //! Service server for planning 
-  ros::ServiceServer right_arm_planning_srv_;
+  ros::ServiceServer left_arm_planning_srv_;
 
   //! A tf transform listener
   tf::TransformListener listener_;
@@ -80,28 +80,28 @@ class Right_arm_planner
   public:
   //! Subscribes to and advertises topics; initializes fitter and marker publication flags
   /*! Also attempts to connect to database */
-  Right_arm_planner(ros::NodeHandle nh) : nh_(nh), priv_nh_("~")
+  Left_arm_planner(ros::NodeHandle nh) : nh_(nh), priv_nh_("~")
    {
      
  
-     right_arm_planning_srv_ = nh_.advertiseService(nh_.resolveName("right_arm_planning_srv"), &Right_arm_planner::serviceCallback, this);
+     left_arm_planning_srv_ = nh_.advertiseService(nh_.resolveName("left_arm_planning_srv"), &Left_arm_planner::serviceCallback, this);
      
-     right_arm_planning_controller_pub_ = nh_.advertise<control_msgs::FollowJointTrajectoryActionGoal>("/right_arm/joint_trajectory_controller/follow_joint_trajectory/goal", 1, true);
+     left_arm_planning_controller_pub_ = nh_.advertise<control_msgs::FollowJointTrajectoryActionGoal>("/left_arm/joint_trajectory_controller/follow_joint_trajectory/goal", 1, true);
      //right_arm_planning_controller_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("/right_arm/joint_trajectory_controller/follow_joint_trajectory/feedback", 1, true);
     
-     right_arm_planning_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+     left_arm_planning_pub_ = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
     
     }
   //! Empty stub
-  ~Right_arm_planner() {}
+  ~Left_arm_planner() {}
 };
 
-bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &request, grasp_estimator::ArmPlanning::Response &response)
+bool Left_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &request, grasp_estimator::ArmPlanning::Response &response)
 { 
   grasp_estimator::ArmPlanning service_request;
   service_request.request.goal=request.goal;	
   // Setup MoveIt enviroment
-  moveit::planning_interface::MoveGroup group("right_hand_arm");  
+  moveit::planning_interface::MoveGroup group("left_hand_arm");  
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;  
   moveit::planning_interface::MoveGroup::Plan simple_plan; 
   moveit_msgs::DisplayTrajectory display_trajectory;
@@ -133,8 +133,8 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
   	ROS_INFO("Listening for world_link_2_wrist_stamped");
   	tf::StampedTransform world_link_2_wrist_stamped;
   	ros::Time now0 = ros::Time::now();
-  	listener_.waitForTransform("vito_anchor","right_hand_palm_dummy_link", now0, ros::Duration(4));
-  	listener_.lookupTransform("vito_anchor","right_hand_palm_dummy_link", now0, world_link_2_wrist_stamped);
+  	listener_.waitForTransform("vito_anchor","left_hand_palm_dummy_link", now0, ros::Duration(4));
+  	listener_.lookupTransform("vito_anchor","left_hand_palm_dummy_link", now0, world_link_2_wrist_stamped);
   	tf::Transform world_link_2_wrist;
   	world_link_2_wrist.setOrigin(world_link_2_wrist_stamped.getOrigin());
   	world_link_2_wrist.setBasis(world_link_2_wrist_stamped.getBasis());
@@ -152,7 +152,7 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
   	rotation_wrist_home.getRPY(roll_wrist, pitch_wrist, yaw_wrist);
   	  
   	ROS_INFO("RPY_wrist = (%f, %f, %f)", roll_wrist, pitch_wrist, yaw_wrist);
-  	ROS_INFO ("Right_arm_planner_srv:Success in receving wrist transformation with 7 elements (Orient(x,y,z,w) ,Pos(x,y,z)): %f, %f ,%f, %f, %f, %f, %f",quaternion_wrist_home[0],quaternion_wrist_home[1],quaternion_wrist_home[2],quaternion_wrist_home[3],position_wrist_home[0],position_wrist_home[1],position_wrist_home[2]);
+  	ROS_INFO ("Left_arm_planner_srv:Success in receving wrist transformation with 7 elements (Orient(x,y,z,w) ,Pos(x,y,z)): %f, %f ,%f, %f, %f, %f, %f",quaternion_wrist_home[0],quaternion_wrist_home[1],quaternion_wrist_home[2],quaternion_wrist_home[3],position_wrist_home[0],position_wrist_home[1],position_wrist_home[2]);
   	  
   	// Setup moveit start position
   	start_pose.orientation.x = quaternion_wrist_home[0];
@@ -172,7 +172,7 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
       ROS_ERROR("Desidered Position is empty");
       response.result = response.NO_DES_POS_RECEIVED;
     }
-    ROS_INFO ("Right_arm_planner_srv:Success in receving desidered wrist transformation with 7 elements (Orient(x,y,z,w) ,Pos(x,y,z)): %f, %f ,%f, %f, %f, %f, %f",des_position.pose.orientation.x,des_position.pose.orientation.y,des_position.pose.orientation.z,des_position.pose.orientation.w,des_position.pose.position.x,des_position.pose.position.y,des_position.pose.position.z);
+    ROS_INFO ("Left_arm_planner_srv:Success in receving desidered wrist transformation with 7 elements (Orient(x,y,z,w) ,Pos(x,y,z)): %f, %f ,%f, %f, %f, %f, %f",des_position.pose.orientation.x,des_position.pose.orientation.y,des_position.pose.orientation.z,des_position.pose.orientation.w,des_position.pose.position.x,des_position.pose.position.y,des_position.pose.position.z);
       
     tf::Transform des_wrist_pose(tf::Quaternion(des_position.pose.orientation.x, des_position.pose.orientation.y, des_position.pose.orientation.z, des_position.pose.orientation.w), tf::Vector3( des_position.pose.position.x,  des_position.pose.position.y,  des_position.pose.position.z));
     
@@ -202,7 +202,7 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
     target_pose.orientation.w = des_position.pose.orientation.w;
     //target_pose.orientation.w = 1;
     //group.(target_pose); 
-    ROS_INFO("Starting wrist planning for right arm");
+    ROS_INFO("Starting wrist planning for left arm");
 
 
     ROS_INFO("Setting Pose Target");
@@ -221,7 +221,7 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
     ROS_INFO("Visualizing simple plan ");
     display_trajectory.trajectory_start = simple_plan.start_state_;
     display_trajectory.trajectory.push_back(simple_plan.trajectory_);
-    right_arm_planning_pub_.publish(display_trajectory);        
+    left_arm_planning_pub_.publish(display_trajectory);        
     //      Sleep to give Rviz time to visualize the plan. 
     sleep(3.0);
     if (success==(bool)1)
@@ -241,19 +241,19 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
 
   if(service_request.request.goal.decision==(int)3)
   { 
-    ROS_INFO("Starting wrist planning for right arm");
+    ROS_INFO("Starting wrist planning for left arm");
   	std::vector<double> group_variable_values;
     //group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values); 
     
       ros::Time start_time = ros::Time::now();
-      std::string topic = nh_.resolveName("/right_arm/joint_states");
-      ROS_INFO(" Waiting for right arm joint state on topic %s", topic.c_str());
+      std::string topic = nh_.resolveName("/left_arm/joint_states");
+      ROS_INFO(" Waiting for left arm joint state on topic %s", topic.c_str());
       
       sensor_msgs::JointState::ConstPtr CurrentState_ConstPtr =
       ros::topic::waitForMessage<sensor_msgs::JointState>(topic, nh_, ros::Duration(3.0));
       if(!CurrentState_ConstPtr) ROS_ERROR("empty joint states!");
-       else ROS_INFO(" Received state is not empty for right arm joint state on topic %s", topic.c_str());
-      ROS_INFO(" Received state for right arm joint state on topic %s", topic.c_str());
+       else ROS_INFO(" Received state is not empty for left arm joint state on topic %s", topic.c_str());
+      ROS_INFO(" Received state for left arm joint state on topic %s", topic.c_str());
       
         // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[0])); 
         // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[1]));
@@ -307,17 +307,9 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
       ROS_INFO("Visualizing simple plan  (again)");
       display_trajectory.trajectory_start = simple_plan.start_state_;
       display_trajectory.trajectory.push_back(simple_plan.trajectory_);
-      right_arm_planning_pub_.publish(display_trajectory);
+      left_arm_planning_pub_.publish(display_trajectory);
      
-      //ROS_INFO("First trajectory Point %f",trajectory_controller_msgs.goal.trajectory.points[0]);
-     //;
-      
-     //display_trajectory.trajectory();
-     // 00034   , path_tolerance(_alloc)
-     // 00035   , goal_tolerance(_alloc)
-     // 00036   , goal_time_tolerance()
-      //right_arm_planning_controller_pub_.publish(trajectory_controller_msgs);
-   
+    
   }
   
   ROS_INFO(" All is DONE !!! ");
@@ -329,11 +321,11 @@ bool Right_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &r
 
 int main(int argc, char **argv) 
 {
-  ros::init(argc, argv, "right_arm_planning_node");
-  ROS_INFO("Right arm planner is Here!!!");
+  ros::init(argc, argv, "left_arm_planning_node");
+  ROS_INFO("Left arm planner is Here!!!");
   ros::NodeHandle nh;
  
-  grasp_estimator::Right_arm_planner node(nh);
+  grasp_estimator::Left_arm_planner node(nh);
 
   //ros::spin();
   ros::AsyncSpinner spinner(8); // Use 8 threads

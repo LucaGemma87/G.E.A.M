@@ -34,17 +34,17 @@
 int main(int argc, char **argv)
 {  
 
-  ros::init(argc, argv, "ping_right_arm_planning");
+  ros::init(argc, argv, "ping_left_arm_planning");
   ros::NodeHandle nh;
 
-  std::string service_name("right_arm_planning_srv");
+  std::string service_name("left_arm_planning_srv");
   while ( !ros::service::waitForService(service_name, ros::Duration().fromSec(3.0)) && nh.ok() )
   {
     ROS_INFO("Waiting for service %s...", service_name.c_str());
   }
   if (!nh.ok()) exit(0);
   
-  grasp_estimator::ArmPlanning right_arm_planning_srv;
+  grasp_estimator::ArmPlanning left_arm_planning_srv;
   
   int    joint_change_position[7];
   joint_change_position[0] = 1; 
@@ -56,36 +56,36 @@ int main(int argc, char **argv)
   joint_change_position[6] = 1;
   
   float  joint_position[7];
-  joint_position[0] =  1.75; 
-  joint_position[1] =  -0.65; 
-  joint_position[2] =  2.3; 
-  joint_position[3] =  1.6; 
-  joint_position[4] =  -0.4; 
-  joint_position[5] =  -1.75; 
-  joint_position[6] =  -1.75;
+  joint_position[0] =  0.8; 
+  joint_position[1] =  -0.6; 
+  joint_position[2] =  1.57; 
+  joint_position[3] =  -1.3; 
+  joint_position[4] =  -0.5; 
+  joint_position[5] =  0.2; 
+  joint_position[6] =  -1.8;
 
   for( int i = 0; i < 7; ++i)
   {
-    right_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position[i];
-    right_arm_planning_srv.request.goal.joint_position[i]=joint_position[i];
+    left_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position[i];
+    left_arm_planning_srv.request.goal.joint_position[i]=joint_position[i];
     //ROS_INFO("Joint change position %f : %f",float(i),float(joint_change_position[i]));
     //ROS_INFO("Joint position %f : %f",float(i),float(joint_position[i]));
   }
   int decision = 3;
-  right_arm_planning_srv.request.goal.decision=(int)decision;
-  right_arm_planning_srv.request.goal.arm_name="right_arm";
+  left_arm_planning_srv.request.goal.decision=(int)decision;
+  left_arm_planning_srv.request.goal.arm_name="left_hand_arm";
    
-  ROS_INFO("right_arm_planning  waiting for service on topic right_arm_planning_srv");
+  ROS_INFO("ping_left_arm_planning  waiting for service on topic left_arm_planning_srv");
   
-  if (!ros::service::call(service_name, right_arm_planning_srv))
+  if (!ros::service::call(service_name, left_arm_planning_srv))
   {
-    ROS_ERROR("Call to right_arm_planning_srv service failed");
+    ROS_ERROR("Call to left_arm_planning_srv service failed");
     exit(0);
   }
-  ROS_INFO("right_arm_planning  recivint results for service on topic right_arm_planning_srv");
-  if (right_arm_planning_srv.response.result != right_arm_planning_srv.response.SUCCESS)
+  ROS_INFO("ping_left_arm_planning  recivint results for service on topic left_arm_planning_srv");
+  if (left_arm_planning_srv.response.result != left_arm_planning_srv.response.SUCCESS)
     {
-     ROS_ERROR("right_arm_planning_srv returned error %d", right_arm_planning_srv.response.result);
+     ROS_ERROR("left_arm_planning_srv returned error %d", left_arm_planning_srv.response.result);
      exit(0);
     }
   else 
@@ -93,10 +93,10 @@ int main(int argc, char **argv)
     ROS_INFO("Receving result");
     int result;
     float error;
-    result= right_arm_planning_srv.response.result;
-    error= right_arm_planning_srv.response.error;
+    result= left_arm_planning_srv.response.result;
+    error= left_arm_planning_srv.response.error;
     ROS_INFO("Result: %f,Error  %f", (float)result, (float)error);
-    ROS_INFO("ping_right_arm_planning Done !!!");
+    ROS_INFO("ping_left_arm_planning Done !!!");
     
   }
   
@@ -128,26 +128,26 @@ int main(int argc, char **argv)
 
   for( int i = 0; i < 7; ++i)
   {
-    right_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position[i];
-    right_arm_planning_srv.request.goal.joint_position[i]=joint_position[i];
+    left_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position[i];
+    left_arm_planning_srv.request.goal.joint_position[i]=joint_position[i];
     //ROS_INFO("Joint change position %f : %f",float(i),float(joint_change_position[i]));
     //ROS_INFO("Joint position %f : %f",float(i),float(joint_position[i]));
   }
  
-  right_arm_planning_srv.request.goal.decision=(int)decision;
-   right_arm_planning_srv.request.goal.arm_name="right_arm";
+  left_arm_planning_srv.request.goal.decision=(int)decision;
+   left_arm_planning_srv.request.goal.arm_name="left_hand_arm";
   
-  ROS_INFO("right_arm_planning  waiting for service on topic right_arm_planning_srv");
+  ROS_INFO("left_arm_planning  waiting for service on topic left_arm_planning_srv");
   
-  if (!ros::service::call(service_name, right_arm_planning_srv))
+  if (!ros::service::call(service_name, left_arm_planning_srv))
   {
-    ROS_ERROR("Call to right_arm_planning_srv service failed");
+    ROS_ERROR("Call to left_arm_planning_srv service failed");
     exit(0);
   }
-  ROS_INFO("right_arm_planning  recivint results for service on topic right_arm_planning_srv");
-  if (right_arm_planning_srv.response.result != right_arm_planning_srv.response.SUCCESS)
+  ROS_INFO("left_arm_planning  recivint results for service on topic left_arm_planning_srv");
+  if (left_arm_planning_srv.response.result != left_arm_planning_srv.response.SUCCESS)
     {
-     ROS_ERROR("right_arm_planning_srv returned error %d", right_arm_planning_srv.response.result);
+     ROS_ERROR("left_arm_planning_srv returned error %d", left_arm_planning_srv.response.result);
      exit(0);
     }
   else 
@@ -155,10 +155,10 @@ int main(int argc, char **argv)
     ROS_INFO("Receving result");
     int result;
     float error;
-    result= right_arm_planning_srv.response.result;
-    error= right_arm_planning_srv.response.error;
+    result= left_arm_planning_srv.response.result;
+    error= left_arm_planning_srv.response.error;
     ROS_INFO("Result: %f,Error  %f", (float)result, (float)error);
-    ROS_INFO("ping_right_arm_planning Done !!!");
+    ROS_INFO("ping_left_arm_planning Done !!!");
     
   }
   // fa il saluto
@@ -189,25 +189,25 @@ int main(int argc, char **argv)
 
   for( int i = 0; i < 7; ++i)
   {
-    right_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position[i];
-    right_arm_planning_srv.request.goal.joint_position[i]=joint_position[i];
+    left_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position[i];
+    left_arm_planning_srv.request.goal.joint_position[i]=joint_position[i];
     //ROS_INFO("Joint change position %f : %f",float(i),float(joint_change_position[i]));
     //ROS_INFO("Joint position %f : %f",float(i),float(joint_position[i]));
   }
  
-  right_arm_planning_srv.request.goal.decision=(int)decision;
-  right_arm_planning_srv.request.goal.arm_name="right_arm";
-  ROS_INFO("right_arm_planning  waiting for service on topic right_arm_planning_srv");
+  left_arm_planning_srv.request.goal.decision=(int)decision;
+  left_arm_planning_srv.request.goal.arm_name="left_hand_arm";
+  ROS_INFO("left_arm_planning  waiting for service on topic left_arm_planning_srv");
   
-  if (!ros::service::call(service_name, right_arm_planning_srv))
+  if (!ros::service::call(service_name, left_arm_planning_srv))
   {
-    ROS_ERROR("Call to right_arm_planning_srv service failed");
+    ROS_ERROR("Call to left_arm_planning_srv service failed");
     exit(0);
   }
-  ROS_INFO("right_arm_planning  recivint results for service on topic right_arm_planning_srv");
-  if (right_arm_planning_srv.response.result != right_arm_planning_srv.response.SUCCESS)
+  ROS_INFO("left_arm_planning  recivint results for service on topic left_arm_planning_srv");
+  if (left_arm_planning_srv.response.result != left_arm_planning_srv.response.SUCCESS)
     {
-     ROS_ERROR("right_arm_planning_srv returned error %d", right_arm_planning_srv.response.result);
+     ROS_ERROR("left_arm_planning_srv returned error %d", left_arm_planning_srv.response.result);
      exit(0);
     }
   else 
@@ -215,10 +215,10 @@ int main(int argc, char **argv)
     ROS_INFO("Receving result");
     int result;
     float error;
-    result= right_arm_planning_srv.response.result;
-    error= right_arm_planning_srv.response.error;
+    result= left_arm_planning_srv.response.result;
+    error= left_arm_planning_srv.response.error;
     ROS_INFO("Result: %f,Error  %f", (float)result, (float)error);
-    ROS_INFO("ping_right_arm_planning Done !!!");
+    ROS_INFO("ping_left_arm_planning Done !!!");
     
   }
   // per tornare in home position
@@ -240,35 +240,36 @@ int main(int argc, char **argv)
   joint_change_position_home[6] = 1;
   
   float  joint_position_home[7];
-  joint_position_home[0] =  0.5; 
-  joint_position_home[1] =  -0.5; 
-  joint_position_home[2] =  2.2; 
-  joint_position_home[3] =  1.4; 
-  joint_position_home[4] =  -0.2; 
-  joint_position_home[5] =  -0.2; 
-  joint_position_home[6] =  -0.2;
+  joint_position_home[0] =  -0.2; 
+  joint_position_home[1] =  -0.4; 
+  joint_position_home[2] =  0; 
+  joint_position_home[3] =  -1.5; 
+  joint_position_home[4] =  -0.6; 
+  joint_position_home[5] =  0.1; 
+  joint_position_home[6] =  -2;
+  
 
   for( int i = 0; i < 7; ++i)
   {
-    right_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position_home[i];
-    right_arm_planning_srv.request.goal.joint_position[i]=joint_position_home[i];
+    left_arm_planning_srv.request.goal.joint_change_position[i]=joint_change_position_home[i];
+    left_arm_planning_srv.request.goal.joint_position[i]=joint_position_home[i];
     //ROS_INFO("Joint change position %f : %f",float(i),float(joint_change_position[i]));
     //ROS_INFO("Joint position %f : %f",float(i),float(joint_position[i]));
   }
   int decision_home = 3;
-  right_arm_planning_srv.request.goal.decision=(int)decision_home;
-   right_arm_planning_srv.request.goal.arm_name="right_arm"; 
-  ROS_INFO("right_arm_planning  waiting for service on topic right_arm_planning_srv");
+  left_arm_planning_srv.request.goal.decision=(int)decision_home;
+   left_arm_planning_srv.request.goal.arm_name="left_hand_arm"; 
+  ROS_INFO("left_arm_planning  waiting for service on topic left_arm_planning_srv");
   
-  if (!ros::service::call(service_name, right_arm_planning_srv))
+  if (!ros::service::call(service_name, left_arm_planning_srv))
   {
-    ROS_ERROR("Call to right_arm_planning_srv service failed");
+    ROS_ERROR("Call to left_arm_planning_srv service failed");
     exit(0);
   }
-  ROS_INFO("right_arm_planning  recivint results for service on topic right_arm_planning_srv");
-  if (right_arm_planning_srv.response.result != right_arm_planning_srv.response.SUCCESS)
+  ROS_INFO("left_arm_planning  recivint results for service on topic left_arm_planning_srv");
+  if (left_arm_planning_srv.response.result != left_arm_planning_srv.response.SUCCESS)
     {
-     ROS_ERROR("right_arm_planning_srv returned error %d", right_arm_planning_srv.response.result);
+     ROS_ERROR("left_arm_planning_srv returned error %d", left_arm_planning_srv.response.result);
      exit(0);
     }
   else 
@@ -276,10 +277,10 @@ int main(int argc, char **argv)
     ROS_INFO("Receving result");
     int result;
     float error;
-    result= right_arm_planning_srv.response.result;
-    error= right_arm_planning_srv.response.error;
+    result= left_arm_planning_srv.response.result;
+    error= left_arm_planning_srv.response.error;
     ROS_INFO("Result: %f,Error  %f", (float)result, (float)error);
-    ROS_INFO("ping_right_arm_planning Done !!!");
+    ROS_INFO("ping_left_arm_planning Done !!!");
     
   }
  return true;

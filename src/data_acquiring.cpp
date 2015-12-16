@@ -17,7 +17,7 @@
 #include <ros/ros.h>
 
 // ROS Control
-//#include "control_msgs/JointTrajectoryControllerState.h"
+#include "control_msgs/JointTrajectoryControllerState.h"
 
 
 namespace grasp_estimator {
@@ -58,8 +58,7 @@ class Data_Logger
  
      data_logger_srv_ = nh_.advertiseService(nh_.resolveName("data_logger_srv"), &Data_Logger::serviceCallback, this);
  
-    
-     //data_logger_pub_ = nh_.advertise<>("/move_group/display_planned_path", 1, true);
+  
     
     }
   //! Empty stub
@@ -84,11 +83,14 @@ bool Data_Logger::serviceCallback(grasp_estimator::DataAcquiring::Request &reque
   geometry_msgs::TransformStamped right_hand_ring_distal_link_msgs,   right_hand_ring_knuckle_link_msgs,   right_hand_ring_middle_link_msgs,   right_hand_ring_proximal_link_msgs;
   geometry_msgs::TransformStamped right_hand_thumb_distal_link_msgs,  right_hand_thumb_knuckle_link_msgs,  right_hand_thumb_proximal_link_msgs;
   // Motor position initialization
-  //control_msgs::JointTrajectoryControllerState::ConstPtr Hand_Synergy_state_ConstPtr;
+  control_msgs::JointTrajectoryControllerState::ConstPtr Hand_Synergy_state_ConstPtr;
   double right_hand_synergy_joint_state_position;
   double right_hand_synergy_joint_state_velocity;
   double right_hand_synergy_joint_state_effort;
+  double current_error;
   //double max_ticks = 15000;
+  // Wrench right arm initialization
+  geometry_msgs::WrenchStamped::ConstPtr right_arm_wrench_stamped_ConstPtr;
 
 
 
@@ -119,15 +121,17 @@ bool Data_Logger::serviceCallback(grasp_estimator::DataAcquiring::Request &reque
     // Now for simulation I use topic /right_hand/joint_trajectory_controller/state with  actual: positions: [value]
     // then I remap to motor tick from 0 (open hand) to 15000 (closed hand) linearly.
     // In a real scenario I will use hand position motor sensor (change the topic and eliminate linear remapping).
-    // std::string topic_2 = nh_.resolveName("/right_hand/joint_trajectory_controller/state");
-    // ROS_INFO(" Waiting for right Hand_Synergy_state %s", topic_2.c_str());
-    // Hand_Synergy_state_ConstPtr=ros::topic::waitForMessage<control_msgs::JointTrajectoryControllerState>(topic_2, nh_, ros::Duration(3.0));
-    // if(!Hand_Synergy_state_ConstPtr) {
-    //   ROS_ERROR("Empty Hand_Synergy_state!");
-    //   response.result=response.ERROR_SERVER;
-    // }
-    // else {ROS_INFO("Hand_Synergy_state Done");}
-    // double Current_Synergy_state=Hand_Synergy_state_ConstPtr->actual.positions[0];
+    std::string topic_2 = nh_.resolveName("/right_hand/joint_trajectory_controller/state");
+    ROS_INFO(" Waiting for right Hand_Synergy_state %s", topic_2.c_str());
+    Hand_Synergy_state_ConstPtr=ros::topic::waitForMessage<control_msgs::JointTrajectoryControllerState>(topic_2, nh_, ros::Duration(3.0));
+    if(!Hand_Synergy_state_ConstPtr) {
+      ROS_ERROR("Empty Hand_Synergy_state!");
+      response.result=response.ERROR_SERVER;
+    }
+    else {ROS_INFO("Hand_Synergy_state Done");
+    current_error=Hand_Synergy_state_ConstPtr->error.positions[0];
+    //ROS_INFO("motor_error = %f",current_error);
+    }
     // motor_position_sim=max_ticks*Current_Synergy_state;
     // ROS_INFO("motor_position_sim = %f",motor_position_sim);
     right_hand_synergy_joint_state_position=CurrentState_Hand_ConstPtr->position[28]; 
@@ -201,7 +205,17 @@ bool Data_Logger::serviceCallback(grasp_estimator::DataAcquiring::Request &reque
     listener_.waitForTransform("right_arm_7_link","right_hand_thumb_proximal_link",now1, ros::Duration(4));
     listener_.lookupTransform("right_arm_7_link","right_hand_thumb_proximal_link",now1, wrist_2_right_hand_thumb_proximal_link_stamped);    
     
-
+     
+    //// Acquiring the wrench by simulated sensor on right arm (Wrench Stamped)
+    // This will chance in real scenario to the real sensor measuremnet
+    std::string topic_3 = nh_.resolveName("/right_arm_7_link_ft_sensor_topic");
+    ROS_INFO(" Waiting for WrenchStamped on right arm 7 link  %s", topic_3.c_str()); 
+    right_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+    if(!right_arm_wrench_stamped_ConstPtr) {
+      ROS_ERROR("Empty WrenchStamped!");
+      response.result=response.ERROR_SERVER;
+    }
+    else {ROS_INFO("WrenchStamped acquired");}
 
     
 
@@ -283,6 +297,11 @@ bool Data_Logger::serviceCallback(grasp_estimator::DataAcquiring::Request &reque
     data_request.response.data.right_hand_synergy_joint_state_position=right_hand_synergy_joint_state_position;
     data_request.response.data.right_hand_synergy_joint_state_velocity=right_hand_synergy_joint_state_velocity;
     data_request.response.data.right_hand_synergy_joint_state_effort=right_hand_synergy_joint_state_effort;
+    data_request.response.data.right_hand_error_position=current_error;
+    
+    // Wrench on the right arm 7 link
+    data_request.response.data.right_arm_wrench_stamped.header=right_arm_wrench_stamped_ConstPtr->header;
+    data_request.response.data.right_arm_wrench_stamped.wrench=right_arm_wrench_stamped_ConstPtr->wrench;
     
     
     

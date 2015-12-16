@@ -2,6 +2,8 @@
 
 int32 decision
 
+string arm_name
+
 geometry_msgs/PoseStamped des_pose
 
 float32[7]  joint_position 

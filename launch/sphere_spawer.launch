@@ -1,0 +1,5 @@
+<launch>
+<!-- Spawn a robot into Gazebo -->
+    <param name="sphere_description" command="$(find xacro)/xacro.py $(find grasp_estimator)/model/sphere.urdf.xacro" />
+    <node name="sphere_spawner" pkg="gazebo_ros" type="spawn_model" args="-param sphere_description -urdf -model sphere -x -0.91 -y -0.22 -z 1.15 -R -0 -P -0 -Y -0" respawn="false" output="screen"/>
+</launch>

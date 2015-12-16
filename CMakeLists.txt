@@ -14,7 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
+#find_package(PkgConfig REQUIRED)
 
+#pkg_check_modules(GSL REQUIRED /home/pacman/Projects/gsl)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -49,6 +51,8 @@ add_message_files(
   FILES
    Goal.msg
    DataAcquired.msg
+   WeightEstimated.msg
+   GraspShape.msg
  )
 
 
@@ -67,7 +71,7 @@ generate_messages(
  std_msgs
   sensor_msgs
   gazebo_msgs
-  
+ 
  )
 
 
@@ -109,10 +113,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
+  INCLUDE_DIRS include
   LIBRARIES grasp_estimator
   CATKIN_DEPENDS roscpp rospy std_msgs  message_runtime
-  DEPENDS system_lib
+  DEPENDS system_lib grasp_estimator gazebo
 )
 
 ###########
@@ -125,13 +129,29 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
   grasp_estimator
+  grasp_estimator/include
+  gazebo
+  #${GSL_INCLUDE_DIRS}
+  /home/pacman/Projects/gsl/include
 )
+
+
+#link_directories(${GSL_LIBRARY_DIRS})
+link_directories(BEFORE /home/pacman/Projects/gsl/lib)
 
 ## Declare a C++ library
 # add_library(grasp_estimator
 #   src/${PROJECT_NAME}/grasp_estimator.cpp
 # )
 
+#add_library(gazebo_ros_ft_sensor src/gazebo_ros_ft_sensor.cpp)
+#add_library(gazebo_ros_ft_sensor src/gazebo_ros_ft_sensor.cpp)
+#target_link_libraries(gazebo_ros_ft_sensor ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} gazebo)
+#add_library(GSL)
+
+#install(TARGETS
+#gazebo_ros_ft_sensor
+#)
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -143,33 +163,70 @@ include_directories(
 #add_executable(grasp_estimator_node src/grasp_estimator_node.cpp)
 
 add_executable(right_arm_planning_node src/right_arm_planning.cpp)
+add_executable(left_arm_planning_node src/left_arm_planning.cpp)
 add_executable(ping_right_arm_planning_node src/ping_right_arm_planning.cpp)
+add_executable(ping_left_arm_planning_node src/ping_left_arm_planning.cpp)
 add_executable(ping_right_arm_planning_node_home src/ping_right_arm_planning_home.cpp)
+add_executable(ping_left_arm_planning_node_home src/ping_left_arm_planning_home.cpp)
 add_executable(test_right_arm_planning_node src/test_right_arm_planning.cpp)
-add_executable(data_acquiring_node src/data_acquiring.cpp)
+add_executable(test_object_in_hand_right_arm_planning_node src/test_object_in_hand_right_arm_planning.cpp)
+add_executable(test_object_in_hand_left_arm_planning_node src/test_object_in_hand_left_arm_planning.cpp)
+
+#add_executable(data_acquiring_node src/data_acquiring.cpp)
+add_executable(left_hand_arm_data_acquiring_node src/left_hand_arm_data_acquiring.cpp)
 add_executable(test_data_acquiring src/test_data_acquiring.cpp)
+add_executable(grasp_state_data_server src/grasp_state_data_server.cpp)
+add_executable(grasp_state_data_server_2 src/grasp_state_data_server_2.cpp)
+add_executable(weight_estimator_server src/weight_estimation.cpp)
+add_executable(grasp_shape_estimator_server src/grasp_shape_estimation.cpp)
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 #add_dependencies(grasp_estimator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(ping_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(ping_right_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(test_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(test_data_acquiring ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(left_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 
+add_dependencies(ping_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(ping_left_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+
+
+add_dependencies(ping_right_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(ping_left_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+
+add_dependencies(test_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+
+add_dependencies(test_object_in_hand_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(test_object_in_hand_left_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+
+#add_dependencies(data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(left_hand_arm_data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(test_data_acquiring ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(grasp_state_data_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(grasp_state_data_server_2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(weight_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(grasp_shape_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp gls)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(right_arm_planning_node    ${catkin_LIBRARIES}   )
+ target_link_libraries(left_arm_planning_node    ${catkin_LIBRARIES}   )
  target_link_libraries(ping_right_arm_planning_node  ${catkin_LIBRARIES}  )
+ target_link_libraries(ping_left_arm_planning_node  ${catkin_LIBRARIES}  )
   target_link_libraries(ping_right_arm_planning_node_home  ${catkin_LIBRARIES})
+   target_link_libraries(ping_left_arm_planning_node_home  ${catkin_LIBRARIES})
  target_link_libraries(test_right_arm_planning_node    ${catkin_LIBRARIES})
-  target_link_libraries(data_acquiring_node  ${catkin_LIBRARIES})
+  target_link_libraries(test_object_in_hand_right_arm_planning_node    ${catkin_LIBRARIES})
+  target_link_libraries(test_object_in_hand_left_arm_planning_node    ${catkin_LIBRARIES})
+ # target_link_libraries(data_acquiring_node  ${catkin_LIBRARIES})
+   target_link_libraries(left_hand_arm_data_acquiring_node  ${catkin_LIBRARIES})
   target_link_libraries(test_data_acquiring  ${catkin_LIBRARIES})
+    target_link_libraries(grasp_state_data_server  ${catkin_LIBRARIES})
+    target_link_libraries(grasp_state_data_server_2  ${catkin_LIBRARIES})
+    target_link_libraries(weight_estimator_server ${catkin_LIBRARIES} gsl gslcblas)
+ target_link_libraries(grasp_shape_estimator_server ${catkin_LIBRARIES} gsl gslcblas)
 
-#############
+############# ${GSL_LIBRARIES}
 ## Install ##
 #############
 
@@ -182,6 +239,7 @@ add_dependencies(test_data_acquiring ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
+
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS grasp_estimator grasp_estimator_node

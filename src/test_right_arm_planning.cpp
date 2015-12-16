@@ -60,13 +60,16 @@ int main(int argc, char **argv)
   
   geometry_msgs::PoseStamped desidered_pose;
   // hardcode position and orientation
-  desidered_pose.pose.position.x=-0.842312;
-  desidered_pose.pose.position.y=0.222919;
-  desidered_pose.pose.position.z=0.105672;
-  desidered_pose.pose.orientation.x=0.560271; 
-  desidered_pose.pose.orientation.y=-0.434454;
-  desidered_pose.pose.orientation.z=-0.418044; 
-  desidered_pose.pose.orientation.w=0.567965;
+  desidered_pose.pose.position.x=-1.055369+0.10;//-1,057152
+  desidered_pose.pose.position.y=0.624553-0.10;//0,108687
+  desidered_pose.pose.position.z=0.212426+0.1; //1,112701
+  desidered_pose.pose.orientation.x=0.560326; 
+  desidered_pose.pose.orientation.y=-0.434411;
+  desidered_pose.pose.orientation.z=-0.418089; 
+  desidered_pose.pose.orientation.w=0.567912;
+
+
+
 
 
 
@@ -89,6 +92,7 @@ int main(int argc, char **argv)
 
   int decision_grasp = 1;
   right_arm_planning_srv.request.goal.decision=(int)decision_grasp;
+  //right_arm_planning_srv.request.goal.arm_name="right_arm";
 
   ROS_INFO("right_arm_planning  waiting for service on topic right_arm_planning_srv");
   
