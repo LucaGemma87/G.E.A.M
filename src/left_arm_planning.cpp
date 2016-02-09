@@ -44,6 +44,8 @@
 #include "control_msgs/FollowJointTrajectoryActionResult.h"
 #include "control_msgs/FollowJointTrajectoryActionFeedback.h"
 
+#define n_joints 8
+
 
 
 namespace grasp_estimator {
@@ -69,6 +71,8 @@ class Left_arm_planner
 
     //! A tf transform broadcaster
   tf::TransformBroadcaster broadcaster_;
+
+
 
    
   //------------------ Callbacks -------------------
@@ -248,63 +252,44 @@ bool Left_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &re
       ros::Time start_time = ros::Time::now();
       std::string topic = nh_.resolveName("/left_arm/joint_states");
       ROS_INFO(" Waiting for left arm joint state on topic %s", topic.c_str());
-      
-      sensor_msgs::JointState::ConstPtr CurrentState_ConstPtr =
-      ros::topic::waitForMessage<sensor_msgs::JointState>(topic, nh_, ros::Duration(3.0));
-      if(!CurrentState_ConstPtr) ROS_ERROR("empty joint states!");
-       else ROS_INFO(" Received state is not empty for left arm joint state on topic %s", topic.c_str());
+      sensor_msgs::JointState::ConstPtr CurrentState_ConstPtr;
+while(!CurrentState_ConstPtr) {
+        CurrentState_ConstPtr = ros::topic::waitForMessage<sensor_msgs::JointState>(topic, nh_, ros::Duration(3.0));
+        ROS_INFO("wait for joint states!");
+      }
+       ROS_INFO(" Received state is not empty for left arm joint state on topic %s", topic.c_str());
       ROS_INFO(" Received state for left arm joint state on topic %s", topic.c_str());
       
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[0])); 
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[1]));
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[2]));
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[3]));
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[4]));
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[5]));
-        // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[6])); 
+       //  ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[0])); 
+       //   ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[1]));
+       //  ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[2]));
+       //   ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[3]));
+       // ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[4]));
+       //   ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[5]));
+       //   ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[6])); 
+       //   ROS_INFO("Joint position %f",float(CurrentState_ConstPtr->position[7]));
       ROS_INFO("Start position received");
-      float  des_joint_position[7]; 
-      int    joint_change_position[7];
+      float  des_joint_position[n_joints];
       group_variable_values=CurrentState_ConstPtr->position;
-      int count =0;
-      for( int i = 0; i < 7; ++i){
-      	des_joint_position[i]=request.goal.joint_position[i];
-        joint_change_position[i]=request.goal.joint_change_position[i];
+      for( int i = 0; i < n_joints-1; ++i){
+      	group_variable_values[i]=service_request.request.goal.joint_position[i];
+        ROS_INFO("Joint [%d] Desidered position %f",(int)i,(float)group_variable_values[i]);
       }
-      //     int count=0;
-     for( int i = 0; i < 7; ++i)
-     { //ROS_INFO("Cycle %f",float(i));
-          if (joint_change_position[i] ==(int)1)
-          {
-       	 
-              group_variable_values[i] = des_joint_position[i];
-            count= count=+1;
-          }
-      
-           
-         
-     }
+      //     int count=0; 
 
-     if (count==7)
-          {
-               ROS_ERROR("joint change position is empty");
-               response.result = response.DES_CHANGE_JOINT_EMPTY;
-          }  	
-    
-
-    ROS_INFO("Setting joint value target done");
-    group.setJointValueTarget(group_variable_values);
-    //sleep(5.0);
-    sleep(3.0);
+     ROS_INFO("Setting joint value target done");
+     group.setJointValueTarget(group_variable_values);
+     //sleep(5.0);
+     sleep(3.0);
      group.move();// questo move group blocca il programma
-    response.result=response.SUCCESS;
-    response.error = (float)0;
+     response.result=response.SUCCESS;
+     response.error = (float)0;
     //group.move();
-    ROS_INFO("Planning Done");
+     ROS_INFO("Planning Done");
     
    
     
-      ROS_INFO("Visualizing simple plan  (again)");
+      ROS_INFO("Pubblishing trajectory");
       display_trajectory.trajectory_start = simple_plan.start_state_;
       display_trajectory.trajectory.push_back(simple_plan.trajectory_);
       left_arm_planning_pub_.publish(display_trajectory);

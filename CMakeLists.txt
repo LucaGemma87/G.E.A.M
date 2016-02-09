@@ -126,14 +126,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-  grasp_estimator
-  grasp_estimator/include
-  gazebo
-  #${GSL_INCLUDE_DIRS}
-  /home/pacman/Projects/gsl/include
-)
+
+include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} gazebo /home/pacman/Projects/gsl/include )
+
 
 
 #link_directories(${GSL_LIBRARY_DIRS})
@@ -162,20 +157,15 @@ link_directories(BEFORE /home/pacman/Projects/gsl/lib)
 ## Declare a C++ executable
 #add_executable(grasp_estimator_node src/grasp_estimator_node.cpp)
 
-add_executable(right_arm_planning_node src/right_arm_planning.cpp)
+#add_executable(right_arm_planning_node src/right_arm_planning.cpp)
 add_executable(left_arm_planning_node src/left_arm_planning.cpp)
-add_executable(ping_right_arm_planning_node src/ping_right_arm_planning.cpp)
-add_executable(ping_left_arm_planning_node src/ping_left_arm_planning.cpp)
-add_executable(ping_right_arm_planning_node_home src/ping_right_arm_planning_home.cpp)
-add_executable(ping_left_arm_planning_node_home src/ping_left_arm_planning_home.cpp)
-add_executable(test_right_arm_planning_node src/test_right_arm_planning.cpp)
-add_executable(test_object_in_hand_right_arm_planning_node src/test_object_in_hand_right_arm_planning.cpp)
+#add_executable(test_object_in_hand_right_arm_planning_node src/test_object_in_hand_right_arm_planning.cpp)
 add_executable(test_object_in_hand_left_arm_planning_node src/test_object_in_hand_left_arm_planning.cpp)
 
 #add_executable(data_acquiring_node src/data_acquiring.cpp)
-add_executable(left_hand_arm_data_acquiring_node src/left_hand_arm_data_acquiring.cpp)
-add_executable(test_data_acquiring src/test_data_acquiring.cpp)
-add_executable(grasp_state_data_server src/grasp_state_data_server.cpp)
+# add_executable(left_hand_arm_data_acquiring_node src/left_hand_arm_data_acquiring.cpp)
+# add_executable(test_data_acquiring src/test_data_acquiring.cpp)
+# add_executable(grasp_state_data_server src/grasp_state_data_server.cpp)
 add_executable(grasp_state_data_server_2 src/grasp_state_data_server_2.cpp)
 add_executable(weight_estimator_server src/weight_estimation.cpp)
 add_executable(grasp_shape_estimator_server src/grasp_shape_estimation.cpp)
@@ -185,43 +175,31 @@ add_executable(grasp_shape_estimator_server src/grasp_shape_estimation.cpp)
 ## same as for the library above
 #add_dependencies(grasp_estimator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+#add_dependencies(right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(left_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 
-add_dependencies(ping_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(ping_left_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-
-
-add_dependencies(ping_right_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(ping_left_arm_planning_node_home ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-
-add_dependencies(test_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-
-add_dependencies(test_object_in_hand_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+#add_dependencies(test_object_in_hand_right_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(test_object_in_hand_left_arm_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 
 #add_dependencies(data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(left_hand_arm_data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(test_data_acquiring ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
-add_dependencies(grasp_state_data_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+# add_dependencies(left_hand_arm_data_acquiring_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+# add_dependencies(test_data_acquiring ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+# add_dependencies(grasp_state_data_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(grasp_state_data_server_2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(weight_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(grasp_shape_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp gls)
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(right_arm_planning_node    ${catkin_LIBRARIES}   )
+# target_link_libraries(right_arm_planning_node    ${catkin_LIBRARIES}   )
  target_link_libraries(left_arm_planning_node    ${catkin_LIBRARIES}   )
- target_link_libraries(ping_right_arm_planning_node  ${catkin_LIBRARIES}  )
- target_link_libraries(ping_left_arm_planning_node  ${catkin_LIBRARIES}  )
-  target_link_libraries(ping_right_arm_planning_node_home  ${catkin_LIBRARIES})
-   target_link_libraries(ping_left_arm_planning_node_home  ${catkin_LIBRARIES})
- target_link_libraries(test_right_arm_planning_node    ${catkin_LIBRARIES})
-  target_link_libraries(test_object_in_hand_right_arm_planning_node    ${catkin_LIBRARIES})
+ 
+
+ # target_link_libraries(test_object_in_hand_right_arm_planning_node    ${catkin_LIBRARIES})
   target_link_libraries(test_object_in_hand_left_arm_planning_node    ${catkin_LIBRARIES})
  # target_link_libraries(data_acquiring_node  ${catkin_LIBRARIES})
-   target_link_libraries(left_hand_arm_data_acquiring_node  ${catkin_LIBRARIES})
-  target_link_libraries(test_data_acquiring  ${catkin_LIBRARIES})
-    target_link_libraries(grasp_state_data_server  ${catkin_LIBRARIES})
+  #  target_link_libraries(left_hand_arm_data_acquiring_node  ${catkin_LIBRARIES})
+  # target_link_libraries(test_data_acquiring  ${catkin_LIBRARIES})
+  #   target_link_libraries(grasp_state_data_server  ${catkin_LIBRARIES})
     target_link_libraries(grasp_state_data_server_2  ${catkin_LIBRARIES})
     target_link_libraries(weight_estimator_server ${catkin_LIBRARIES} gsl gslcblas)
  target_link_libraries(grasp_shape_estimator_server ${catkin_LIBRARIES} gsl gslcblas)

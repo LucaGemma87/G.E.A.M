@@ -98,22 +98,30 @@ void Data_Logger_server::data_acquiring_server()
 
   // wrench initialization
   geometry_msgs::WrenchStamped::ConstPtr left_arm_wrench_stamped_ConstPtr;
-  tf::StampedTransform vito_anchor_2_left_arm_7_link;
-  geometry_msgs::TransformStamped vito_anchor_2_left_arm_7_link_msgs;
+  tf::StampedTransform vito_anchor_2_left_gamma_measure;
+  geometry_msgs::TransformStamped vito_anchor_2_left_gamma_measure_msgs;
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Hand  Joint States    ////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
-  ros::Time start_time = ros::Time::now();
+  ros::Time start_time = ros::Time(0);
   std::string topic_1 = nh_.resolveName("/left_hand/joint_states");
   //ROS_INFO(" Waiting for left hand joint state on topic %s", topic_1.c_str());
   sensor_msgs::JointState::ConstPtr CurrentState_Hand_ConstPtr; 
   //CurrentState_Hand_ConstPtr =ros::topic::waitForMessage<sensor_msgs::JointState>(topic_1, nh_, ros::Duration(3.0));
   while(!CurrentState_Hand_ConstPtr) {
-    ROS_INFO("Try an acquiring Of Hand Joint State");
+    //ROS_INFO("Try an acquiring Of Hand Joint State");
     CurrentState_Hand_ConstPtr = ros::topic::waitForMessage<sensor_msgs::JointState>(topic_1, nh_, ros::Duration(3.0));
   }
   //else {ROS_INFO("Joint State acquired");}
+
+  /////////////////////////////////////////////////////////////////////////////////
+  ///////////////// Sinergy Joint Infomation   ////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////// 
+  
+  msg_data_acquired_now.hand_synergy_joint_state_position=CurrentState_Hand_ConstPtr->position[28]; 
+  msg_data_acquired_now.hand_synergy_joint_state_velocity=CurrentState_Hand_ConstPtr->velocity[28];
+  msg_data_acquired_now.hand_synergy_joint_state_effort=CurrentState_Hand_ConstPtr->effort[28];
   
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Error  Sinergy Joint  /////////////////////////////////////////
@@ -121,17 +129,14 @@ void Data_Logger_server::data_acquiring_server()
   std::string topic_2 = nh_.resolveName("/left_hand/joint_trajectory_controller/state");
   //ROS_INFO(" Waiting for left Hand_Synergy_state %s", topic_2.c_str());
   Hand_Synergy_state_ConstPtr=ros::topic::waitForMessage<control_msgs::JointTrajectoryControllerState>(topic_2, nh_, ros::Duration(3.0));
-  if(!Hand_Synergy_state_ConstPtr) {ROS_ERROR("Empty Hand_Synergy_state!");}
+  while(!Hand_Synergy_state_ConstPtr) {
+    Hand_Synergy_state_ConstPtr=ros::topic::waitForMessage<control_msgs::JointTrajectoryControllerState>(topic_2, nh_, ros::Duration(3.0));
+    }
+    //ROS_ERROR("Empty Hand_Synergy_state!");
   // Completing the topic
   msg_data_acquired_now.hand_error_position=Hand_Synergy_state_ConstPtr->error.positions[0];
   
-  /////////////////////////////////////////////////////////////////////////////////
-  ///////////////// Sinergy Joint Infomation   ////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////// 
-  
-  msg_data_acquired_now.hand_synergy_joint_state_position=CurrentState_Hand_ConstPtr->position[28]; 
-  msg_data_acquired_now.hand_synergy_joint_state_velocity=CurrentState_Hand_ConstPtr->velocity[28];
-  msg_data_acquired_now.hand_synergy_joint_state_effort=CurrentState_Hand_ConstPtr->effort[28]; 
+ 
     
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// TF information            ////////////////////////////////////
@@ -270,7 +275,9 @@ void Data_Logger_server::data_acquiring_server()
    /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Wrench information         ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
-  std::string topic_3 = nh_.resolveName("/left_arm_7_link_ft_sensor_topic");
+  //std::string topic_3 = nh_.resolveName("/left/ft_sensor_topic");
+  std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
+
   //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
   left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
   if(!left_arm_wrench_stamped_ConstPtr) {
@@ -280,17 +287,17 @@ void Data_Logger_server::data_acquiring_server()
     }
   }
 
-  listener_.waitForTransform("vito_anchor","left_arm_7_link",now1, ros::Duration(1));
-  listener_.lookupTransform("vito_anchor","left_arm_7_link",now1, vito_anchor_2_left_arm_7_link);
-  tf::transformStampedTFToMsg(vito_anchor_2_left_arm_7_link,vito_anchor_2_left_arm_7_link_msgs);  
-  msg_data_acquired_now.vito_anchor_2_arm_7_link=vito_anchor_2_left_arm_7_link_msgs; 
+  listener_.waitForTransform("vito_anchor","left_measure",ros::Time(0), ros::Duration(1));
+  listener_.lookupTransform("vito_anchor","left_measure",ros::Time(0), vito_anchor_2_left_gamma_measure);
+  tf::transformStampedTFToMsg(vito_anchor_2_left_gamma_measure,vito_anchor_2_left_gamma_measure_msgs);  
+  msg_data_acquired_now.vito_anchor_2_arm_7_link=vito_anchor_2_left_gamma_measure_msgs; 
 
   // Wrench on the left arm 7 link
   msg_data_acquired_now.arm_wrench_stamped.header=left_arm_wrench_stamped_ConstPtr->header;
   msg_data_acquired_now.arm_wrench_stamped.wrench=left_arm_wrench_stamped_ConstPtr->wrench;
   
 
-  msg_data_acquired_=msg_data_acquired_now;
+  this->msg_data_acquired_=msg_data_acquired_now;
   //ROS_INFO("Data_Acquiring_srv Done !!!");    
   return;
 }
@@ -322,7 +329,7 @@ int main(int argc, char **argv)
     
     ROS_INFO("Data_Logger_server is Here !!!");
 
-	ros::Rate loop_rate(10);
+	ros::Rate loop_rate(20);
 
 	while (ros::ok())
 	{

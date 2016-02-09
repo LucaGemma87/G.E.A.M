@@ -1,0 +1,8 @@
+<launch>
+
+
+<include  file="$(find vito_description)/launch/display.launch"/> 
+<!-- <include  file="$(find visual_perception)/launch/visual_perception.launch"/> -->
+<!-- <include  file="$(find grasp_planner)/launch/trajectory_demo_online.launch"/> -->
+ 
+</launch>	

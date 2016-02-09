@@ -1,20 +1,19 @@
 <launch>
 
-<node pkg="grasp_estimator" name="right_arm_planning_node" type="right_arm_planning_node" respawn="true" output="screen">
-</node>
-<node pkg="grasp_estimator" name="left_arm_planning_node" type="left_arm_planning_node" respawn="true" output="screen">
-</node>
-<node pkg="grasp_estimator" name="left_hand_arm_data_acquiring_node" type="left_hand_arm_data_acquiring_node" respawn="true" output="screen">
-</node> 
+<!-- <node pkg="grasp_estimator" name="right_arm_planning_node" type="right_arm_planning_node" respawn="true" output="screen">
+</node> -->
+<!-- <node pkg="grasp_estimator" name="left_arm_planning_node" type="left_arm_planning_node" respawn="true" output="screen">
+</node> -->
+
 
 <node pkg="grasp_estimator" name="grasp_state_data_server_2" type="grasp_state_data_server_2" respawn="true" output="screen">
 </node> 
 
-<node pkg="grasp_estimator" name="weight_estimator_server" type="weight_estimator_server" respawn="true" output="screen">
-</node>
+<!--  <node pkg="grasp_estimator" name="weight_estimator_server" type="weight_estimator_server" respawn="true" output="screen">
+</node>   -->
 
-<node pkg="grasp_estimator" name="grasp_shape_estimator_server" type="grasp_shape_estimator_server" respawn="true" output="screen">
-</node>
+  <node pkg="grasp_estimator" name="grasp_shape_estimator_server" type="grasp_shape_estimator_server" respawn="true" output="screen">
+</node>   
 
 
 
