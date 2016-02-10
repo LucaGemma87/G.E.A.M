@@ -222,8 +222,8 @@ void Weight_Estimator_Server::Hand_Calibration()
     ROS_INFO("Estimating first point !");
     for (int i = 0; i <N; ++i)
     {
-     weight_hand_home=+this->weight_measured[i];
-     mass_hand_home=+this->mass_measured[i];
+     weight_hand_home=weight_hand_home+this->weight_measured[i];
+     mass_hand_home=mass_hand_home+this->mass_measured[i];
     }
     weight_hand_home=weight_hand_home/N;
     mass_hand_home=mass_hand_home/N;
