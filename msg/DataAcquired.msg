@@ -51,13 +51,15 @@ geometry_msgs/TransformStamped hand_thumb_proximal_link
 geometry_msgs/WrenchStamped arm_wrench_stamped
 
 geometry_msgs/TransformStamped vito_anchor_2_arm_7_link
+
+geometry_msgs/TransformStamped vito_anchor_2_left_measure
  
 # Current Motor position [degree] of the hand
 
 float32 hand_synergy_joint_state_position
 float32 hand_synergy_joint_state_velocity
 float32 hand_synergy_joint_state_effort
-float32 hand_error_position
+float64 hand_error_position
 
 # Current Motor Current  [A] of the hand
 

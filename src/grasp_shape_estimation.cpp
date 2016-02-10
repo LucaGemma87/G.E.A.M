@@ -1385,7 +1385,7 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
   ROS_INFO("Grasp Shape: Sphere");  
   ROS_INFO("Sphere Center: %f, %f, %f",FIT(0),FIT(1),FIT(2));
   ROS_INFO("Sphere Radius: %f",FIT(3));
-  ROS_INFO( "Index Reconstruction Sphere: %g\n",  pow(chi, 2.0) / dof);
+  //ROS_INFO( "Index Reconstruction Sphere: %g\n",  pow(chi, 2.0) / dof);
   marker_pub_.publish( marker_sph );
   position_msgs.point.x=FIT(0);
   position_msgs.point.y=FIT(1);
@@ -1406,7 +1406,7 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
   ROS_INFO("Grasp Shape: ELLISSOID"); 
   ROS_INFO(" Ellissoid Center: %f, %f, %f",FIT_ell(0),FIT_ell(1),FIT_ell(2));
   ROS_INFO(" Ellissoid r1 = %f,r2 = %f ,r3 = %f",FIT_ell(3),FIT_ell(4),FIT_ell(5));
-  ROS_INFO( "Index Reconstruction Ellissoid: %g\n",  pow(chi_ell, 2.0) / dof_ell);
+  //ROS_INFO( "Index Reconstruction Ellissoid: %g\n",  pow(chi_ell, 2.0) / dof_ell);
   position_msgs.point.x=FIT_ell(0);
   position_msgs.point.y=FIT_ell(1);
   position_msgs.point.z=FIT_ell(2);
@@ -1427,7 +1427,7 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
   ROS_INFO("Grasp Shape: Cylinder");
   ROS_INFO("Cylinder Center: %f, %f, %f", FIT_cyl(0),center_y, FIT_cyl(1));
   ROS_INFO("Cylender Radius_1 , Radius_2 and Height: %f, %f, %f",FIT_cyl(2),FIT_cyl(3),height);
-  ROS_INFO( "Index Reconstruction Cylinder: %g\n",  pow(chi_cyl, 2.0) / dof_cyl);
+  //ROS_INFO( "Index Reconstruction Cylinder: %g\n",  pow(chi_cyl, 2.0) / dof_cyl);
   marker_pub_.publish(marker_cyl);
   position_msgs.point.x=FIT_cyl(0);
   position_msgs.point.y=center_y;
@@ -1449,7 +1449,7 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
   ROS_INFO("Plane Center: %f, %f, %f", FIT_plan(4), FIT_plan(5),FIT_plan(6));
   ROS_INFO("Plane Coef: %f, %f, %f , %f",  FIT_plan(0), FIT_plan(1), FIT_plan(2), FIT_plan(3));
   ROS_INFO("Plane Width, Height and Depth: %f, %f, %f",width_plan,height_plan,depth_plan);
-  ROS_INFO( "Index Reconstruction: %g\n",  pow(chi_plan, 2.0) / dof_plan);
+  //ROS_INFO( "Index Reconstruction: %g\n",  pow(chi_plan, 2.0) / dof_plan);
   marker_pub_.publish(marker_box);
   position_msgs.point.x= FIT_plan(4);
   position_msgs.point.y= FIT_plan(5);
@@ -1505,16 +1505,18 @@ int main(int argc, char **argv)
     ROS_INFO("Grasp_Shape_Estimator_Server is Here !!!");
     //int index=(int)0;
 	ros::Rate loop_rate(20);
-
+  ros::AsyncSpinner spinner(4); 
 	while (ros::ok())
 	{
 
 		Grasp_Shape_Estimator_Server.publishDataState();
 
-		ros::spinOnce();
+		//ros::spinOnce();
+    spinner.start();
 		//ROS_INFO("Data Published !");
 		loop_rate.sleep();
 	}
+  spinner.stop();
 
 	return 0;
 }

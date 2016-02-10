@@ -100,6 +100,9 @@ void Data_Logger_server::data_acquiring_server()
   geometry_msgs::WrenchStamped::ConstPtr left_arm_wrench_stamped_ConstPtr;
   tf::StampedTransform vito_anchor_2_left_gamma_measure;
   geometry_msgs::TransformStamped vito_anchor_2_left_gamma_measure_msgs;
+  
+  tf::StampedTransform vito_anchor_2_left_arm_7_link;
+  geometry_msgs::TransformStamped vito_anchor_2_left_arm_7_link_msgs;
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Hand  Joint States    ////////////////////////////////////////
@@ -134,7 +137,7 @@ void Data_Logger_server::data_acquiring_server()
     }
     //ROS_ERROR("Empty Hand_Synergy_state!");
   // Completing the topic
-  msg_data_acquired_now.hand_error_position=Hand_Synergy_state_ConstPtr->error.positions[0];
+  msg_data_acquired_now.hand_error_position=(double)Hand_Synergy_state_ConstPtr->error.positions[0];
   
  
     
@@ -275,26 +278,32 @@ void Data_Logger_server::data_acquiring_server()
    /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Wrench information         ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
-  //std::string topic_3 = nh_.resolveName("/left/ft_sensor_topic");
-  std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
+  // //std::string topic_3 = nh_.resolveName("/left/ft_sensor_topic");
+  // std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
 
-  //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
-  left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
-  if(!left_arm_wrench_stamped_ConstPtr) {
-    ROS_INFO("Empty WrenchStamped!");
-    while(!left_arm_wrench_stamped_ConstPtr){
-     left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
-    }
-  }
+  // //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
+  // left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+  // if(!left_arm_wrench_stamped_ConstPtr) {
+  //   ROS_INFO("Empty WrenchStamped!");
+  //   while(!left_arm_wrench_stamped_ConstPtr){
+  //    left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+  //   }
+  // }
+  //   // Wrench on the ft sensor
+  // msg_data_acquired_now.arm_wrench_stamped.header=left_arm_wrench_stamped_ConstPtr->header;
+  // msg_data_acquired_now.arm_wrench_stamped.wrench=left_arm_wrench_stamped_ConstPtr->wrench;
 
   listener_.waitForTransform("vito_anchor","left_measure",ros::Time(0), ros::Duration(1));
   listener_.lookupTransform("vito_anchor","left_measure",ros::Time(0), vito_anchor_2_left_gamma_measure);
   tf::transformStampedTFToMsg(vito_anchor_2_left_gamma_measure,vito_anchor_2_left_gamma_measure_msgs);  
-  msg_data_acquired_now.vito_anchor_2_arm_7_link=vito_anchor_2_left_gamma_measure_msgs; 
+  msg_data_acquired_now.vito_anchor_2_left_measure=vito_anchor_2_left_gamma_measure_msgs; 
 
-  // Wrench on the left arm 7 link
-  msg_data_acquired_now.arm_wrench_stamped.header=left_arm_wrench_stamped_ConstPtr->header;
-  msg_data_acquired_now.arm_wrench_stamped.wrench=left_arm_wrench_stamped_ConstPtr->wrench;
+  listener_.waitForTransform("vito_anchor","left_arm_7_link",ros::Time(0), ros::Duration(1));
+  listener_.lookupTransform("vito_anchor","left_arm_7_link",ros::Time(0), vito_anchor_2_left_arm_7_link);
+  tf::transformStampedTFToMsg(vito_anchor_2_left_arm_7_link,vito_anchor_2_left_arm_7_link_msgs);  
+  msg_data_acquired_now.vito_anchor_2_arm_7_link=vito_anchor_2_left_arm_7_link_msgs;
+
+
   
 
   this->msg_data_acquired_=msg_data_acquired_now;
