@@ -27,6 +27,8 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
+#define Hz 50
+
 namespace grasp_estimator
 {
 
@@ -121,11 +123,11 @@ void Data_Logger_server::data_acquiring_server()
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Sinergy Joint Infomation   ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
-  
+  //ROS_INFO("Sinergy Joint = %g", CurrentState_Hand_ConstPtr->position[28]); 
   msg_data_acquired_now.hand_synergy_joint_state_position=CurrentState_Hand_ConstPtr->position[28]; 
   msg_data_acquired_now.hand_synergy_joint_state_velocity=CurrentState_Hand_ConstPtr->velocity[28];
   msg_data_acquired_now.hand_synergy_joint_state_effort=CurrentState_Hand_ConstPtr->effort[28];
-  
+  //ROS_INFO("CurrentState_Hand_ConstPtr->position[28];");
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Error  Sinergy Joint  /////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
@@ -279,24 +281,24 @@ void Data_Logger_server::data_acquiring_server()
   ///////////////// Wrench information         ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
   // //std::string topic_3 = nh_.resolveName("/left/ft_sensor_topic");
-  // std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
+  std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
 
-  // // //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
-  // left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
-  // if(!left_arm_wrench_stamped_ConstPtr) {
-  //   ROS_INFO("Empty WrenchStamped!");
-  //   while(!left_arm_wrench_stamped_ConstPtr){
-  //    left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
-  //   }
-  // }
+  // //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
+  left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+  if(!left_arm_wrench_stamped_ConstPtr) {
+    ROS_INFO("Empty WrenchStamped!");
+    while(!left_arm_wrench_stamped_ConstPtr){
+     left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+    }
+  }
   //   // Wrench on the ft sensor
-  // msg_data_acquired_now.arm_wrench_stamped.header=left_arm_wrench_stamped_ConstPtr->header;
-  // msg_data_acquired_now.arm_wrench_stamped.wrench=left_arm_wrench_stamped_ConstPtr->wrench;
+  msg_data_acquired_now.arm_wrench_stamped.header=left_arm_wrench_stamped_ConstPtr->header;
+  msg_data_acquired_now.arm_wrench_stamped.wrench=left_arm_wrench_stamped_ConstPtr->wrench;
 
-  // listener_.waitForTransform("vito_anchor","left_measure",ros::Time(0), ros::Duration(1));
-  // listener_.lookupTransform("vito_anchor","left_measure",ros::Time(0), vito_anchor_2_left_gamma_measure);
-  // tf::transformStampedTFToMsg(vito_anchor_2_left_gamma_measure,vito_anchor_2_left_gamma_measure_msgs);  
-  // msg_data_acquired_now.vito_anchor_2_left_measure=vito_anchor_2_left_gamma_measure_msgs; 
+  listener_.waitForTransform("vito_anchor","left_measure",ros::Time(0), ros::Duration(1));
+  listener_.lookupTransform("vito_anchor","left_measure",ros::Time(0), vito_anchor_2_left_gamma_measure);
+  tf::transformStampedTFToMsg(vito_anchor_2_left_gamma_measure,vito_anchor_2_left_gamma_measure_msgs);  
+  msg_data_acquired_now.vito_anchor_2_left_measure=vito_anchor_2_left_gamma_measure_msgs; 
 
   listener_.waitForTransform("vito_anchor","left_arm_7_link",ros::Time(0), ros::Duration(1));
   listener_.lookupTransform("vito_anchor","left_arm_7_link",ros::Time(0), vito_anchor_2_left_arm_7_link);
@@ -304,7 +306,7 @@ void Data_Logger_server::data_acquiring_server()
   msg_data_acquired_now.vito_anchor_2_arm_7_link=vito_anchor_2_left_arm_7_link_msgs;
 
 
-  
+  msg_data_acquired_now.time_now=ros::Time::now();
 
   this->msg_data_acquired_=msg_data_acquired_now;
   //ROS_INFO("Data_Acquiring_srv Done !!!");    
@@ -334,11 +336,13 @@ int main(int argc, char **argv)
     grasp_estimator::DataAcquired::ConstPtr msg_data_acquired;//
 	ros::NodeHandle nh;
     //tf::TransformStamped msgs_tf;
+     ros::AsyncSpinner spinner(4); 
+   spinner.start();
 	grasp_estimator::Data_Logger_server data_logger_publisher(nh);
     
     ROS_INFO("Data_Logger_server is Here !!!");
 
-	ros::Rate loop_rate(20);
+	//ros::Rate loop_rate(Hz);
 
 	while (ros::ok())
 	{
@@ -347,10 +351,11 @@ int main(int argc, char **argv)
         //Data_Logger_server::data_acquiring_server;
 		data_logger_publisher.publishDataState();
 
-		ros::spinOnce();
+		//ros::spinOnce();
+    
 		//ROS_INFO("Data Published !");
-		loop_rate.sleep();
+		//loop_rate.sleep();
 	}
-
+  spinner.stop();
 	return 0;
 }

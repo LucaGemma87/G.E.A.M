@@ -43,6 +43,17 @@
 #include <moveit/move_group_interface/move_group.h>
 
 #define N 25
+//#define N 25
+#define left_hand_name "left_hand"
+#define dual_hand_arm_name "dual_hand_arm"
+#define Hz 50
+#define N2 9
+#define error_thresh 0.001
+#define weight_threshold 2 // 2 Newton circa 200 gr
+#define Hand_threshold 6.80
+#define arm_state_num 5
+#define N_cog 3
+
 
 namespace grasp_estimator
 {
@@ -75,20 +86,40 @@ private:
   
     grasp_estimator::DataAcquired msg_data_acquired_array[N];
     
-    //
+
+    grasp_estimator::DataAcquired msg_data_acquired_cog_array[N_cog];
+    
 
 
 public:
 	// callback functions
       void weight_estimation_server(const grasp_estimator::DataAcquired::ConstPtr &msg_data_acquired_now);
+  // server function    
       void Hand_Calibration();
       void Object_Estimation();
       void publishDataState();
+      void Hand_Close_State();
+      void Hand_Control();
+      void Arm_Control();
+      void Arm_exp_position();
+      void hand_cog_calibration();
       static int center_f(const gsl_vector *x, void *data, gsl_vector *f);
-    
-      int index; 
+
+      int index;
+
+      int index_calibration; 
+
+      int hand_close_state;
+
+      int arm_state;
 
       bool calibration;
+
+      bool cog_calibration;
+
+      bool active_move;
+
+      bool arm_action_move;
 
       double weight_measured[N];
       double mass_measured[N];
@@ -96,18 +127,27 @@ public:
       double weight_measured_now;
       double mass_measured_now;
 
-      double hand_weight;
-      double hand_mass; 
+      double hand_weight[N2-1];
+      double hand_mass[N2-1]; 
+
+      double weight_object;
+      double mass_object;
 
       tf::Vector3 hand_gravity_center;
+  
+      moveit::planning_interface::MoveGroup *left_hand_ = new moveit::planning_interface::MoveGroup(left_hand_name); 
+      moveit::planning_interface::MoveGroup *dual_hand_arm_ = new moveit::planning_interface::MoveGroup(dual_hand_arm_name);
+      std::string hand_pose_name[N2-1];
+      std::string dual_arm_pose_name[arm_state_num];
+          
 
 	// constructor
 	Weight_Estimator_Server(ros::NodeHandle nh) : 
 		nh_(nh), 
-        priv_nh_("~")
+    priv_nh_("~")
 	{
                      
-        msg_grasp_state_now_ = nh_.subscribe<grasp_estimator::DataAcquired>(nh_.resolveName("/left_hand/grasp_state_data_server_"),5,
+   msg_grasp_state_now_ = nh_.subscribe<grasp_estimator::DataAcquired>(nh_.resolveName("/left_hand/grasp_state_data_server_"),5,
                                                                                      &Weight_Estimator_Server::weight_estimation_server,
                                                                                      this);
         
@@ -115,12 +155,17 @@ public:
 		pub_weight_states_ = nh_.advertise<grasp_estimator::WeightEstimated>(nh_.resolveName("/left_hand/mass_estimator_server_"), 5);
 	
 		pub_cog_ = nh_.advertise<geometry_msgs::PointStamped>(nh_.resolveName("/left_hand/cog_server"),5);
+  
 
-
+    //left_hand_ = new moveit::planning_interface::MoveGroup(left_hand_name);  
+    
 	}
 
 	//! Empty stub
-	~Weight_Estimator_Server() {}
+	~Weight_Estimator_Server() 
+  {
+   delete left_hand_;
+  }
 
 };
 
@@ -180,176 +225,380 @@ int Weight_Estimator_Server::center_f(const gsl_vector *x, void *data, gsl_vecto
 
 void Weight_Estimator_Server::weight_estimation_server(const grasp_estimator::DataAcquired::ConstPtr &msg_data_acquired_now)
 {// const grasp_estimator::DataAcquired::ConstPtr msg_data_acquired_	
-  //ROS_INFO("Acquiring message");
- 
-	this->msg_data_acquired_recent=*msg_data_acquired_now;
-  if(this->index==N){this->index=0;}
-  this->msg_data_acquired_array[this->index]=this->msg_data_acquired_recent; 
+  
+ if(this->index==N){this->index=0;}
+  this->msg_data_acquired_recent=*msg_data_acquired_now;
   //ROS_INFO("Hand Joint Error = %g",(double)this->msg_data_acquired_recent.hand_error_position);
-  if((double)this->msg_data_acquired_recent.hand_error_position<0.001){
-   tf::StampedTransform vito_anchor_2_left_ft_sensor;
-   transformStampedMsgToTF(this->msg_data_acquired_recent.vito_anchor_2_left_measure,vito_anchor_2_left_ft_sensor);
-   tf::Vector3 position = vito_anchor_2_left_ft_sensor.getOrigin();
-   tf::Quaternion quaternion = vito_anchor_2_left_ft_sensor.getRotation();
-   tf::Matrix3x3 ft_rotation_matrix(quaternion);
-   tf::Vector3 force(this->msg_data_acquired_recent.arm_wrench_stamped.wrench.force.x,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.force.y,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.force.z);
-   tf::Vector3 torque(this->msg_data_acquired_recent.arm_wrench_stamped.wrench.torque.x,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.torque.y,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.torque.z);
-   tf::Vector3 gravity(0,0,-9.81);
-   tf::Vector3 gravity_ft_frame=ft_rotation_matrix.transpose()*gravity;
-   force=ft_rotation_matrix.transpose()*force;
-   this->mass_measured[this->index]=(sqrt(pow(force[0]/gravity_ft_frame[0],2)+pow(force[1]/gravity_ft_frame[1],2)+pow(force[2]/gravity_ft_frame[2],2)));
-   this->weight_measured[this->index]=(sqrt(pow(force[0],2)+pow(force[1],2)+pow(force[2],2)));
-   this->mass_measured_now=this->mass_measured[this->index];
-   this->weight_measured_now=this->weight_measured[this->index];
-   ROS_INFO("weight_measured now = %g",this->weight_measured_now); 
-   ROS_INFO("mass_measured now  = %g",this->mass_measured_now);
-   this->index=this->index+1;
+   //ROS_INFO("hand_synergy_joint_state_position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position);
+     this->msg_data_acquired_array[this->index]=this->msg_data_acquired_recent;  
+      //ROS_INFO("Acquiring message %d",this->index); 
+       tf::StampedTransform vito_anchor_2_left_ft_sensor;
+       transformStampedMsgToTF(this->msg_data_acquired_recent.vito_anchor_2_left_measure,vito_anchor_2_left_ft_sensor);
+       tf::Vector3 position = vito_anchor_2_left_ft_sensor.getOrigin();
+       tf::Quaternion quaternion = vito_anchor_2_left_ft_sensor.getRotation();
+       tf::Matrix3x3 ft_rotation_matrix(quaternion);
+       tf::Vector3 force(this->msg_data_acquired_recent.arm_wrench_stamped.wrench.force.x,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.force.y,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.force.z);
+       tf::Vector3 torque(this->msg_data_acquired_recent.arm_wrench_stamped.wrench.torque.x,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.torque.y,this->msg_data_acquired_recent.arm_wrench_stamped.wrench.torque.z);
+       tf::Vector3 gravity(0,0,-9.81);
+       tf::Vector3 gravity_ft_frame=ft_rotation_matrix.transpose()*gravity;
+       force=ft_rotation_matrix.transpose()*force;
+       this->mass_measured[this->index]=(sqrt(pow(force[0]/gravity_ft_frame[0],2)+pow(force[1]/gravity_ft_frame[1],2)+pow(force[2]/gravity_ft_frame[2],2)));
+       this->weight_measured[this->index]=(sqrt(pow(force[0],2)+pow(force[1],2)+pow(force[2],2)));
+       this->mass_measured_now=this->mass_measured[this->index];
+       this->weight_measured_now=this->weight_measured[this->index];
+       //ROS_INFO("weight_measured now = %g",this->weight_measured_now); 
+       //ROS_INFO("mass_measured now  = %g",this->mass_measured_now);
+       this->index=this->index+1; 
+       
+}
+
+// hand calibration works well with 25 data recorded
+void Weight_Estimator_Server::Hand_Calibration()
+{ 
+  //ROS_INFO("Index_calibration %d",this->index_calibration);
+  //ROS_INFO("Index_calibration %d",this->index_count);
+  //ROS_INFO("Close state %d",this->hand_close_state);
+  double weight_hand,mass_hand;
+  if(this->active_move==false && this->index==N && this->index_calibration==this->hand_close_state && this->msg_data_acquired_recent.hand_error_position<=error_thresh)//&& this->msg_data_acquired_recent.hand_error_position<=error_thresh
+  { 
+   ROS_INFO("Estimating %d point !",this->index_calibration);
+   for (int i = 0; i <N; ++i)
+   {
+    weight_hand=weight_hand+this->weight_measured[i];
+    mass_hand=mass_hand+this->mass_measured[i];
+   }
+   weight_hand=weight_hand/N;
+   mass_hand=mass_hand/N;
+       ROS_INFO("weight_hand  = %g",(double)weight_hand);
+       ROS_INFO("mass_hand  = %g",(double)mass_hand);
+       this->hand_weight[this->index_calibration]=weight_hand;
+       this->hand_mass[this->index_calibration]=mass_hand;
+       ROS_INFO("Calibration %d point : DONE !\n",this->index_calibration);
+       //this->index=0;
+       this->index_calibration=this->index_calibration+1;
+       this->active_move=true;  
+   }
+   else
+   {
+   //this->index=0;
+   this->active_move=false; 
+   }
+
+  if(this->active_move==true){
+  //ROS_INFO("Close state %d",this->hand_close_state);  
+  switch(this->index_calibration) 
+  {
+    case 0 : 
+    { 
+      if(this->index==N)
+      {
+       //ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+          ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+          this->left_hand_->setNamedTarget("left_hand_home");
+          // call the moves
+          if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)  )
+          {
+           ROS_ERROR("An error occured during Calibrating hand");
+          } 
+          else{ROS_INFO("Hand Moved to home position");
+          this->active_move=false;
+          this->hand_close_state=this->index_calibration;
+          this->index=0;}
+        } 
+    }
+     case 1 : 
+     {
+      if(this->index==N){
+       ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+       this->left_hand_->setNamedTarget("left_hand_preshape");
+        // call the moves
+       
+       if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)  )
+       {
+         ROS_ERROR("An error occured during Calibrating hand");
+       }
+      else{ROS_INFO("Hand  moved to preshape position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+      }
+     }
+    case 2 :
+    {
+     if(this->index==N){ 
+     ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+     this->left_hand_->setNamedTarget("left_hand_25_close");
+     // call the moves
+
+     if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS) )
+     {
+       ROS_ERROR("An error occured during Calibrating hand");
+     } 
+     else{ROS_INFO("Hand  moved  to 25 close position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+     }
+    } 
+    case 3 :
+    {
+     if(this->index==N){
+     ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+      this->left_hand_->setNamedTarget("left_hand_56_close");
+     // call the moves
+
+      if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)  )
+      {
+        ROS_ERROR("An error occured during Calibrating hand");
+      }
+       else{ROS_INFO("Hand  moved  to 56 close position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+     }
+    }
+    case 4 :
+    { if(this->index==N){
+     ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position);  
+     this->left_hand_->setNamedTarget("left_hand_70_close");
+     // call the moves
+
+     if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)  )
+     {
+       ROS_ERROR("An error occured during Calibrating hand");
+     } 
+      else{ROS_INFO("Hand  moved  to 70 close position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+     }
+    }
+    case 5 :
+    { 
+      if(this->index==N){
+        ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+     this->left_hand_->setNamedTarget("left_hand_80_close");
+     // call the moves
+
+     if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)  )
+     {
+       ROS_ERROR("An error occured during Calibrating hand");
+     }
+      else{ROS_INFO("Hand  moved  to 80 close position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+     }
+    } 
+    case 6 : 
+    { 
+     if(this->index==N){ 
+      ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+     this->left_hand_->setNamedTarget("left_hand_90_close");
+     // call the moves
+
+     if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)   )
+     {
+       ROS_ERROR("An error occured during Calibrating hand");
+     }
+      else{ROS_INFO("Hand  moved  to 90 close position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+     }
+    }
+    case 7 : 
+    { 
+      if(this->index==N){
+        ROS_INFO("Hand Synergy Joint Position = %g",(double)this->msg_data_acquired_recent.hand_synergy_joint_state_position); 
+     this->left_hand_->setNamedTarget("left_hand_99_close");
+     // call the moves
+
+     if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS) )
+     {
+       ROS_ERROR("An error occured during Calibrating hand");
+     }
+      else{ROS_INFO("Hand  moved  to 99 close position");this->active_move=false;this->hand_close_state=this->index_calibration;}
+     }
+    } 
+    
+    case 8 : 
+    { 
+     if(this->index==N){
+      this->left_hand_->setNamedTarget("left_hand_home");
+      // call the moves
+
+      if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)  )
+      {
+        ROS_ERROR("An error occured during Calibrating hand");
+      }
+      else{ROS_INFO("Hand Moved to Home position");this->active_move=false;}
+    
+      ROS_INFO("Calibration DONE %g, %g, %g, %g, %g, %g, %g, %g",this->hand_weight[0],this->hand_weight[1],this->hand_weight[2],
+        this->hand_weight[3],this->hand_weight[4],this->hand_weight[5],this->hand_weight[6],this->hand_weight[7]);
+      this->calibration=true;
+      this->active_move=true;
+      this->arm_action_move=true;
+      this->hand_close_state=0;
+     }    
+    }  
+   } 
   }
-  else{
-   ROS_INFO("Waiting for hand joint error position less than 0.001");
-  } 
+}
+
+void Weight_Estimator_Server::Hand_Control()
+{
+ int i; 
+  
+  if(this->active_move==true&&this->weight_object>0.1)
+  { 
+    i=this->hand_close_state+1; 
+    if(i==N2-2){ROS_INFO("Hand is in 90 Close Position: No need planning");i=N2-3;}
+    else
+    {  
+     this->left_hand_->setNamedTarget(this->hand_pose_name[i]);
+     // call the moves
+     if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS) && fabs(this->msg_data_acquired_recent.hand_error_position)<error_thresh)
+     {
+       ROS_ERROR("An error occured during Moving hand");
+      }
+      else{ROS_INFO("Hand moved to: ");ROS_INFO_STREAM(this->hand_pose_name[i];);
+         this->index=0;this->active_move=false;this->hand_close_state=i;}
+     }
+  }
+   if(this->active_move==true&&this->weight_object<0.1)
+   { 
+     i=this->hand_close_state-1;
+     if(i==-1){ROS_INFO("Hand is in Home position. No need for planning");this->hand_close_state=0;}
+     else
+     {
+      this->left_hand_->setNamedTarget(this->hand_pose_name[i]);
+      // call the moves
+      if( !(this->left_hand_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS)&& fabs(this->msg_data_acquired_recent.hand_error_position)<error_thresh)
+      {
+       ROS_ERROR("An error occured during Moving hand");
+      }
+      else{ROS_INFO("Hand moved to: ");ROS_INFO_STREAM(this->hand_pose_name[i]);this->index=0;this->active_move=false;this->hand_close_state=i;}
+   }
+  }
+ 
+}
+
+void Weight_Estimator_Server::Arm_exp_position()
+{  
+  this->dual_hand_arm_->setNamedTarget(this->dual_arm_pose_name[0]);
+      // call the moves
+ if( !(this->dual_hand_arm_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS) )
+  {
+  ROS_ERROR("An error occured during Moving Arm");
+  }
+  else
+  {
+   ROS_INFO("Moved Dual arm to Experimental Position !");  
+   this->arm_state=0;
+   this->index=0;
+  }  
+}
+
+void Weight_Estimator_Server::Arm_Control()
+{
+  if(this->arm_action_move==true){
+   ROS_INFO("Arm state %d",this->arm_state);
+   int i(this->arm_state+1); 
+   if(i>arm_state_num){i=0;}
+   this->dual_hand_arm_->setNamedTarget(this->dual_arm_pose_name[i]);
+      // call the moves
+
+   if( !(this->dual_hand_arm_->move()==moveit_msgs::MoveItErrorCodes::SUCCESS) )
+   {
+   ROS_ERROR("An error occured during Moving Arm");
+   }
+   else
+   {
+     ROS_INFO("Dual arm moved to !");
+     ROS_INFO_STREAM(this->dual_arm_pose_name[i]);  
+     this->arm_state=i;
+     this->arm_action_move==true;
+    }    
+  }
+
+  // if(this->hand_close_state==0&&this->arm_action_move==true){
+  //  this->Arm_exp_position(); 
+  //}
+
 }
 
 
-void Weight_Estimator_Server::Hand_Calibration()
-{ 
-  //ROS_INFO("Start Calibration");
-  double weight_hand_home,mass_hand_home;
-  
-  
-  if(this->index==N)
-  { 
-    ROS_INFO("Estimating first point !");
-    for (int i = 0; i <N; ++i)
-    {
-     weight_hand_home=weight_hand_home+this->weight_measured[i];
-     mass_hand_home=mass_hand_home+this->mass_measured[i];
-    }
-    weight_hand_home=weight_hand_home/N;
-    mass_hand_home=mass_hand_home/N;
-    ROS_INFO("weight_hand_home  = %g",(double)weight_hand_home);
-    ROS_INFO("mass_hand_home  = %g",(double)mass_hand_home);
-    this->calibration=true; 
-    this->index=0;
-    ROS_INFO("Calibration first point : DONE !");
-  }
+// void Weight_Estimator_Server::Hand_Close_State()
+// {
+//  int hand_state(this->hand_close_state);
+//  //ROS_INFO("Hand hand_synergy_joint_state_position = %g" ,this->msg_data_acquired_recent.hand_synergy_joint_state_position);
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.1409) {hand_state=0;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.15&&this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.2499) {hand_state=1;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.24991&&this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.5599) {hand_state=2;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.55991&&this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.6999) {hand_state=3;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.69991&&this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.7999) {hand_state=4;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.79991&&this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.8999) {hand_state=5;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.89991&&this->msg_data_acquired_recent.hand_synergy_joint_state_position<0.9899) {hand_state=6;}
+//  if(this->msg_data_acquired_recent.hand_synergy_joint_state_position>=0.99){hand_state=7;} 
+//  this->hand_close_state=hand_state;
+//  //this->active_move=true;
+// }
 
 
-  
- }
 void Weight_Estimator_Server::Object_Estimation()
 {
-   ROS_INFO("Estimating Object");
+   //if(this->msg_data_acquired_recent.hand_synergy_joint_state_position)
+   
+   double diff_weight(this->weight_measured_now-hand_weight[this->hand_close_state]);
+   //double diff_weight(this->weight_measured_now-Hand_threshold);
+   ROS_INFO("Diff Weight= %g",diff_weight);
+   if(diff_weight>weight_threshold)
+   {
+    ROS_INFO("Object Detected on the hand");
+    this->weight_object=fabs(diff_weight);
+    ROS_INFO("Estimating Object Weight= %g",this->weight_object);
+    this->mass_object=this->mass_measured_now-hand_mass[this->hand_close_state];
+    //this->mass_object=this->mass_measured_now-Hand_threshold/9.81;
+    ROS_INFO("Estimating Object mass= %g",this->mass_object);
+    this->active_move=true;
+   }
+   else
+   {
+    this->weight_object=0;
+    this->mass_object=0;
+    ROS_INFO("No Object on the hand");
+    this->active_move=true;
+    if(this->arm_state!=0)
+    {
+      this->Arm_exp_position();
+    }
+   }
+}
 
+void Weight_Estimator_Server::hand_cog_calibration()
+{ 
+  if(this->arm_state==0&&this->index==N-1)
+  {
+   ROS_INFO("Measuring %d for estimating cog",this->arm_state);
+   this->msg_data_acquired_cog_array[this->arm_state]=this->msg_data_acquired_recent;
+  }
+  if(this->arm_state==1&&this->index==N-1)
+  {
+   ROS_INFO("Measuring %d for estimating cog",this->arm_state);
+   this->msg_data_acquired_cog_array[this->arm_state]=this->msg_data_acquired_recent;
+  }
+  if(this->arm_state==2&&this->index==N-1)
+  {
+   ROS_INFO("Measuring %d for estimating cog",this->arm_state);
+   this->msg_data_acquired_cog_array[this->arm_state]=this->msg_data_acquired_recent;
+  }
+  if(this->arm_state==3&&this->index==N-1)
+  {
+   ROS_INFO("Measuring %d for estimating cog",this->arm_state); 
+   this->msg_data_acquired_cog_array[this->arm_state]=this->msg_data_acquired_recent;
+  } 
+   //Done something
+   if(this->arm_state==4&&this->index==N-1)
+  {
+   ROS_INFO("Measuring %d for estimating cog",this->arm_state); 
+   this->msg_data_acquired_cog_array[this->arm_state]=this->msg_data_acquired_recent;
+
+   ROS_INFO("Hand Cog Estimated ! ! !");
+   this->cog_calibration=true;
+  }
+  
+ 
+ 
 }
 
 
 void Weight_Estimator_Server::publishDataState()
 { 
-  ROS_INFO("pub");
-  // moveit::planning_interface::MoveGroup dual_hand_arm("dual_hand_arm");
-  // double weight_measured;
-  // double mass_measured;  
-     
-  //       if(this->index<N&&msg_data_acquired_recent.hand_synergy_joint_state_position<=0.16)
-  //       {  
-  //         ROS_INFO("Calibrating Hand");
-  //         this->index=this->index+1;
-  //         this->hand_weight+=weight_measured;
-  //         this->hand_mass+=mass_measured;
-  //         weight_estimate_now.weight=weight_measured;
-  //         weight_estimate_now.time_now=ros::Time::now();
-  //         if(this->index==N)
-  //         { 
-           
-  //          this->hand_weight=this->hand_weight/(N);
-  //          ROS_INFO("Calibration DONE");
-  //          this->hand_mass=this->hand_mass/(N);
-  //          weight_estimate_now.weight=this->hand_weight;
-  //          weight_estimate_now.time_now=ros::Time::now();
-           
-  //          this->index=this->index+1;
-         
-  //          ROS_INFO("Hand Weight = %f",(float)this->hand_weight);
-  //          ROS_INFO("Hand Mass = %f",(float)this->hand_mass);
-           
-
-  //             ROS_INFO("Estimating cog DONE");
-
-  //         }
-         
-  //       }
-
-
-  //       if(this->index>=N)
-  //       {
-  //        ROS_INFO("Put Object on the hand"); 
-  //        this->index=this->index+1; 
-  //        double weight_object = fabs(weight_measured-this->hand_weight);
-  //        ROS_INFO("Diff weight hand %f",(float)weight_object) ;
-  //        if(abs(weight_object)<=0.05*(this->hand_weight))
-  //        { 
-  //         // gravity_center[0]=(1/this->hand_weight)*center[0];
-  //         // gravity_center[1]=(1/this->hand_weight)*center[1];
-  //         // gravity_center[2]=(1/this->hand_weight)*center[2];
-  //         weight_estimate_now.weight=weight_measured;
-
-  //         ROS_INFO("No object in the hand. weight of the hand: %f",(float)weight_measured); 
-  //         moveit::planning_interface::MoveGroup left_hand("left_hand");
-  //          left_hand.setNamedTarget("left_hand_preshape");
-
-  //             // call the moves
-  //           if( !(left_hand.move()==moveit_msgs::MoveItErrorCodes::SUCCESS) )
-  //           {
-  //                 ROS_ERROR("An error occured during Graspig Object");
-  //           } 
-  //         //ROS_INFO("gravity_center %f %f %f",(float)gravity_center[0],(float)gravity_center[1],(float)gravity_center[2]);
-  //        }
-  //        else
-  //        { 
-  //          this->index=this->index+1;
-  //          ROS_INFO("Object in the hand: weight without the hand = %f",(float)weight_object);
-  //          weight_estimate_now.weight=weight_object;
-  //          weight_estimate_now.time_now=ros::Time::now();
-           
-           
-
-  //             // configure hand move
-  //          moveit::planning_interface::MoveGroup left_hand("left_hand");
-  //          left_hand.setNamedTarget("left_hand_90_close");
-
-  //             // call the moves
-  //           if( !(left_hand.move()==moveit_msgs::MoveItErrorCodes::SUCCESS) )
-  //           {
-  //                 ROS_ERROR("An error occured during Graspig Object");
-  //           }
-  //          // gravity_center[0]=(1/weight_measured)*center[0];
-  //          // gravity_center[1]=(1/weight_measured)*center[1];
-  //          // gravity_center[2]=(1/weight_measured)*center[2];
-         
-  //          //ROS_INFO("gravity_center %f %f %f",(float)gravity_center[0],(float)gravity_center[1],(float)gravity_center[2]);
-
-
-  //          weight_estimate_now.act=(int)1;
-  //          weight_estimate_now.time_now=ros::Time::now();
-  //         }
-  //       }
-
-  //         // geometry_msgs::PointStamped cog_msgs;
-  //         // cog_msgs.point.x=gravity_center[0];
-  //         // cog_msgs.point.y=gravity_center[1];
-  //         // cog_msgs.point.z=gravity_center[2];
-  //         // cog_msgs.header.seq=1;
-  //         // cog_msgs.header.stamp=ros::Time::now();
-  //         // cog_msgs.header.frame_id="left_measure";
-  //         // pub_cog_.publish(cog_msgs);
-  //         //ROS_INFO("Estimating cog DONE");
-        
-       
-        pub_weight_states_.publish(weight_estimate_now);
-      //}
-
-    }
+ pub_weight_states_.publish(weight_estimate_now);
+}
 
 }//namespace grasp_estimator
 
@@ -361,41 +610,66 @@ int main(int argc, char **argv)
     //grasp_estimator::WeightEstimated::ConstPtr weight_estimate_now;
 	ros::NodeHandle nh;
     //tf::TransformStamped msgs_tf;
-  
+  //sleep(5.0);
+  //ros::Rate loop_rate(Hz);
+  ros::AsyncSpinner spinner(4);
   grasp_estimator::Weight_Estimator_Server Weight_Estimator_Server(nh);
-
+  //sleep(2.0); 
   Weight_Estimator_Server.index = 0;
-  Weight_Estimator_Server.hand_weight=0;
-  sleep(2.0);
+  Weight_Estimator_Server.index_calibration = 0;
+  Weight_Estimator_Server.calibration=false;
+  Weight_Estimator_Server.active_move=true;
+  Weight_Estimator_Server.hand_close_state=0;
+  Weight_Estimator_Server.hand_pose_name[0]="left_hand_home";
+  Weight_Estimator_Server.hand_pose_name[1]="left_hand_preshape";
+  Weight_Estimator_Server.hand_pose_name[2]="left_hand_25_close";
+  Weight_Estimator_Server.hand_pose_name[3]="left_hand_56_close";
+  Weight_Estimator_Server.hand_pose_name[4]="left_hand_70_close";
+  Weight_Estimator_Server.hand_pose_name[5]="left_hand_80_close";
+  Weight_Estimator_Server.hand_pose_name[6]="left_hand_90_close";
+  Weight_Estimator_Server.hand_pose_name[7]="left_hand_99_close";
+  Weight_Estimator_Server.dual_arm_pose_name[0]="dual_hand_arm_exp";
+  Weight_Estimator_Server.dual_arm_pose_name[1]="dual_hand_arm_exp_1";
+  Weight_Estimator_Server.dual_arm_pose_name[2]="dual_hand_arm_exp_2";
+  Weight_Estimator_Server.dual_arm_pose_name[3]="dual_hand_arm_exp_3";
+  Weight_Estimator_Server.dual_arm_pose_name[4]="dual_hand_arm_exp_4";
+  Weight_Estimator_Server.arm_action_move=false;
   
-  ros::AsyncSpinner spinner(4);  
-	ros::Rate loop_rate(20);
+	
+  
+  spinner.start();
+  Weight_Estimator_Server.Arm_exp_position();
+  
+  sleep(2.0); 
 
-	while (ros::ok())
-	{
-    if(Weight_Estimator_Server.calibration==false){
-      Weight_Estimator_Server.Hand_Calibration();
-		}
-    else{
+  
+  while (ros::ok())
+	 {
+    //spinner.start(); 
+       //Weight_Estimator_Server.Hand_Close_State();
+      if(Weight_Estimator_Server.calibration==false) // || Weight_Estimator_Server.cog_calibration==false
+      {
+     
+       Weight_Estimator_Server.Hand_Calibration();
+      // if(Weight_Estimator_Server.calibration==true&&Weight_Estimator_Server.cog_calibration==false) {
+      //   Weight_Estimator_Server.Arm_Control();
+      //   Weight_Estimator_Server.hand_cog_calibration();
+      // }
+    } 
+    else
+    { 
      Weight_Estimator_Server.Object_Estimation(); 
-     Weight_Estimator_Server.publishDataState();
-    }
+     Weight_Estimator_Server.Hand_Control();
+     //Weight_Estimator_Server.Arm_Control();
     
 
-		//ROS_INFO("msg_data_acquired_recent.arm_wrench_stamped.wrench.force.x: %f ",(float)msg_data_acquired_recent.arm_wrench_stamped.wrench.force.x); 
-        //
-		//ros::spinOnce();
-    spinner.start();
-
-    //if(Weight_Estimator_Server.index==N-1){interrupt=1;} 
-      
-
-		//ROS_INFO("Data Published !");
-		loop_rate.sleep();
+    }
+     Weight_Estimator_Server.publishDataState();
+	 	//loop_rate.sleep();
 	}
-  Weight_Estimator_Server.calibration=false;
+  
   spinner.stop();
-
+  Weight_Estimator_Server.calibration=false;
 	return 0;
 }
 
