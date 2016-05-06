@@ -1,0 +1,2 @@
+% gravity , f/t measurements all expressed in F/T sensor frame
+% [gx, gy, gz, fx, fy, fz, tx, ty, tz]

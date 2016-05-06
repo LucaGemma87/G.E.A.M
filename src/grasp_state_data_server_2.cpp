@@ -27,7 +27,7 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
-#define Hz 50
+#define Hz 25
 
 namespace grasp_estimator
 {
@@ -47,35 +47,113 @@ private:
 
 	// publishers
 	ros::Publisher pub_data_states_;
+  
+  // Subscriber
+  ros::Subscriber sub_hand_state_;
+  ros::Subscriber sub_sinergy_hand_state_;
+  ros::Subscriber sub_error_sinergy_hand_state_;
+  ros::Subscriber sub_ft_sensor_state_;
+
 
 
 	grasp_estimator::DataAcquired msg_data_acquired_;
 
+  sensor_msgs::JointState CurrentState_Hand_now,CurrentSinergyState_Hand_now;
+  control_msgs::JointTrajectoryControllerState CurrentErrorSinergyState_Hand_now; 
 
+  geometry_msgs::WrenchStamped ft_sensor_measure_now;
 
 
 public:
 	// callback functions
       void data_acquiring_server();
+      void sinergy_state(const sensor_msgs::JointState::ConstPtr &CurrentSinergyState_Hand);
+      void error_sinergy_state(const control_msgs::JointTrajectoryControllerState::ConstPtr &CurrentErrorSinergyState_Hand);
+      void glove_state(const sensor_msgs::JointState::ConstPtr &CurrentState_Hand);
+      void ft_sensor_state(const geometry_msgs::WrenchStamped::ConstPtr &ft_sensor_measure);
       void publishDataState();
+
 
 	// constructor
 	Data_Logger_server(ros::NodeHandle nh) : 
 		nh_(nh), 
         priv_nh_("~")
 	{
-        
+    CurrentSinergyState_Hand_now.name.resize(1);
+    CurrentSinergyState_Hand_now.position.resize(1);
+    CurrentSinergyState_Hand_now.velocity.resize(1);
+    CurrentSinergyState_Hand_now.effort.resize(1);
+
+    CurrentState_Hand_now.name.resize(33);
+    CurrentState_Hand_now.position.resize(33);
+    CurrentState_Hand_now.velocity.resize(33);
+    CurrentState_Hand_now.effort.resize(33);
+
+  
+   CurrentErrorSinergyState_Hand_now.desired.positions.resize(1);
+   CurrentErrorSinergyState_Hand_now.desired.velocities.resize(1);
+   CurrentErrorSinergyState_Hand_now.desired.accelerations.resize(1);
+   CurrentErrorSinergyState_Hand_now.desired.effort.resize(1);
+ 
+  CurrentErrorSinergyState_Hand_now.actual.positions.resize(1);
+  CurrentErrorSinergyState_Hand_now.actual.velocities.resize(1);
+  CurrentErrorSinergyState_Hand_now.actual.accelerations.resize(1);
+  CurrentErrorSinergyState_Hand_now.actual.effort.resize(1);
+  
+  CurrentErrorSinergyState_Hand_now.error.positions.resize(1);
+  CurrentErrorSinergyState_Hand_now.error.velocities.resize(1);
+  CurrentErrorSinergyState_Hand_now.error.accelerations.resize(1);
+  CurrentErrorSinergyState_Hand_now.error.effort.resize(1);
+
         
 		// advertise topics
 		pub_data_states_ = nh_.advertise<grasp_estimator::DataAcquired>(nh_.resolveName("/left_hand/grasp_state_data_server_"), 5);
 	
-		
+		    sub_hand_state_ = nh_.subscribe<sensor_msgs::JointState>(nh_.resolveName("/left_hand/imu_glove/joint_states"),10,
+                                                                                       &Data_Logger_server::glove_state,
+                                                                                       this);
+       sub_sinergy_hand_state_ = nh_.subscribe<sensor_msgs::JointState>(nh_.resolveName("/left_hand/joint_states"),10,
+                                                                                      &Data_Logger_server::sinergy_state,
+                                                                                      this);
+       sub_error_sinergy_hand_state_ = nh_.subscribe<control_msgs::JointTrajectoryControllerState>(nh_.resolveName("/left_hand/joint_trajectory_controller/state"),10,
+                                                                                      &Data_Logger_server::error_sinergy_state,
+                                                                                      this);
+       sub_ft_sensor_state_ = nh_.subscribe<geometry_msgs::WrenchStamped>(nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered"),10,
+                                                                                      &Data_Logger_server::ft_sensor_state,
+                                                                                      this);
+
 	}
 
 	//! Empty stub
 	~Data_Logger_server() {}
 
 };
+
+
+void Data_Logger_server::sinergy_state(const sensor_msgs::JointState::ConstPtr &CurrentSinergyState_Hand)
+{
+ this->CurrentSinergyState_Hand_now = *CurrentSinergyState_Hand;
+ //ROS_INFO("Sinergy acquired");
+}
+
+void Data_Logger_server::error_sinergy_state(const control_msgs::JointTrajectoryControllerState::ConstPtr &CurrentErrorSinergyState_Hand)
+{
+ this->CurrentErrorSinergyState_Hand_now = *CurrentErrorSinergyState_Hand;
+ //ROS_INFO("Error Sinergy acquired"); 
+}
+
+void Data_Logger_server::glove_state(const sensor_msgs::JointState::ConstPtr &CurrentState_Hand)
+{
+ this->CurrentState_Hand_now = *CurrentState_Hand;
+ ROS_INFO("Glove acquired");
+}
+
+void Data_Logger_server::ft_sensor_state(const geometry_msgs::WrenchStamped::ConstPtr &ft_sensor_measure)
+{
+  ft_sensor_measure_now = *ft_sensor_measure;
+  //ROS_INFO("FT sensor acquired");
+}
+
 //const grasp_estimator::DataAcquired::ConstPtr msg_data_acquired_
 void Data_Logger_server::data_acquiring_server()
 {// const grasp_estimator::DataAcquired::ConstPtr msg_data_acquired_
@@ -109,37 +187,27 @@ void Data_Logger_server::data_acquiring_server()
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Hand  Joint States    ////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
-  ros::Time start_time = ros::Time(0);
-  std::string topic_1 = nh_.resolveName("/left_hand/joint_states");
-  //ROS_INFO(" Waiting for left hand joint state on topic %s", topic_1.c_str());
-  sensor_msgs::JointState::ConstPtr CurrentState_Hand_ConstPtr; 
-  //CurrentState_Hand_ConstPtr =ros::topic::waitForMessage<sensor_msgs::JointState>(topic_1, nh_, ros::Duration(3.0));
-  while(!CurrentState_Hand_ConstPtr) {
-    //ROS_INFO("Try an acquiring Of Hand Joint State");
-    CurrentState_Hand_ConstPtr = ros::topic::waitForMessage<sensor_msgs::JointState>(topic_1, nh_, ros::Duration(3.0));
-  }
-  //else {ROS_INFO("Joint State acquired");}
+
+  
+  //msg_data_acquired_now.hand_joint_curr_state=CurrentState_Hand_now;
+  
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Sinergy Joint Infomation   ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
   //ROS_INFO("Sinergy Joint = %g", CurrentState_Hand_ConstPtr->position[28]); 
-  msg_data_acquired_now.hand_synergy_joint_state_position=CurrentState_Hand_ConstPtr->position[28]; 
-  msg_data_acquired_now.hand_synergy_joint_state_velocity=CurrentState_Hand_ConstPtr->velocity[28];
-  msg_data_acquired_now.hand_synergy_joint_state_effort=CurrentState_Hand_ConstPtr->effort[28];
+  //msg_data_acquired_now.hand_synergy_joint_state_position=CurrentSinergyState_Hand_now.position[0]; 
+  //msg_data_acquired_now.hand_synergy_joint_state_velocity=CurrentSinergyState_Hand_now.velocity[0];
+  //msg_data_acquired_now.hand_synergy_joint_state_effort=CurrentSinergyState_Hand_now.effort[0];
+  
+
   //ROS_INFO("CurrentState_Hand_ConstPtr->position[28];");
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////// Error  Sinergy Joint  /////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
-  std::string topic_2 = nh_.resolveName("/left_hand/joint_trajectory_controller/state");
-  //ROS_INFO(" Waiting for left Hand_Synergy_state %s", topic_2.c_str());
-  Hand_Synergy_state_ConstPtr=ros::topic::waitForMessage<control_msgs::JointTrajectoryControllerState>(topic_2, nh_, ros::Duration(3.0));
-  while(!Hand_Synergy_state_ConstPtr) {
-    Hand_Synergy_state_ConstPtr=ros::topic::waitForMessage<control_msgs::JointTrajectoryControllerState>(topic_2, nh_, ros::Duration(3.0));
-    }
-    //ROS_ERROR("Empty Hand_Synergy_state!");
-  // Completing the topic
-  msg_data_acquired_now.hand_error_position=(double)Hand_Synergy_state_ConstPtr->error.positions[0];
+  
+  
+  //msg_data_acquired_now.hand_error_position=CurrentErrorSinergyState_Hand_now.error.positions[0];
   
  
     
@@ -281,22 +349,22 @@ void Data_Logger_server::data_acquiring_server()
   ///////////////// Wrench information         ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////// 
   // //std::string topic_3 = nh_.resolveName("/left/ft_sensor_topic");
-  std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
+  // std::string topic_3 = nh_.resolveName("/left_ft_sensor/left/force_torque_sensor_filtered");
 
-  // //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
-  left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
-  if(!left_arm_wrench_stamped_ConstPtr) {
-    ROS_INFO("Empty WrenchStamped!");
-    while(!left_arm_wrench_stamped_ConstPtr){
-     left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
-    }
-  }
+  // // //ROS_INFO(" Waiting for WrenchStamped on left arm 7 link  %s", topic_3.c_str()); 
+  // left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+  // if(!left_arm_wrench_stamped_ConstPtr) {
+  //   ROS_INFO("Empty WrenchStamped!");
+  //   while(!left_arm_wrench_stamped_ConstPtr){
+  //    left_arm_wrench_stamped_ConstPtr=ros::topic::waitForMessage<geometry_msgs::WrenchStamped>(topic_3, nh_, ros::Duration(3.0));
+  //   }
+  // }
   //   // Wrench on the ft sensor
-  msg_data_acquired_now.arm_wrench_stamped.header=left_arm_wrench_stamped_ConstPtr->header;
-  msg_data_acquired_now.arm_wrench_stamped.wrench=left_arm_wrench_stamped_ConstPtr->wrench;
+  msg_data_acquired_now.arm_wrench_stamped=ft_sensor_measure_now;
+  
 
-  listener_.waitForTransform("vito_anchor","left_measure",ros::Time(0), ros::Duration(1));
-  listener_.lookupTransform("vito_anchor","left_measure",ros::Time(0), vito_anchor_2_left_gamma_measure);
+  listener_.waitForTransform("left_measure","vito_anchor",ros::Time(0), ros::Duration(1));
+  listener_.lookupTransform("left_measure","vito_anchor",ros::Time(0), vito_anchor_2_left_gamma_measure);
   tf::transformStampedTFToMsg(vito_anchor_2_left_gamma_measure,vito_anchor_2_left_gamma_measure_msgs);  
   msg_data_acquired_now.vito_anchor_2_left_measure=vito_anchor_2_left_gamma_measure_msgs; 
 
@@ -309,16 +377,17 @@ void Data_Logger_server::data_acquiring_server()
   msg_data_acquired_now.time_now=ros::Time::now();
 
   this->msg_data_acquired_=msg_data_acquired_now;
-  //ROS_INFO("Data_Acquiring_srv Done !!!");    
+  ROS_INFO("Data_Acquiring_srv Done !!!");    
   return;
 }
 
 
 void Data_Logger_server::publishDataState()
 {
-	data_acquiring_server();
+	
 	pub_data_states_.publish(msg_data_acquired_);
-	return;
+	ROS_INFO("Data Published !!!");
+  //return;
 }
 
 
@@ -342,19 +411,22 @@ int main(int argc, char **argv)
     
     ROS_INFO("Data_Logger_server is Here !!!");
 
-	//ros::Rate loop_rate(Hz);
+	ros::Rate loop_rate(Hz);
 
 	while (ros::ok())
 	{
 		//Tf_acquiring(msgs_tf); msg_data_acquired_.
         //grasp_estimator::Data_Logger_server::data_acquiring_server(msg_data_acquired);
         //Data_Logger_server::data_acquiring_server;
+    data_logger_publisher.data_acquiring_server();
 		data_logger_publisher.publishDataState();
 
 		//ros::spinOnce();
     
 		//ROS_INFO("Data Published !");
-		//loop_rate.sleep();
+		//
+
+    loop_rate.sleep();
 	}
   spinner.stop();
 	return 0;

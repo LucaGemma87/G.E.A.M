@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <launch>
 
 <!-- <node pkg="grasp_estimator" name="right_arm_planning_node" type="right_arm_planning_node" respawn="true" output="screen">
@@ -6,15 +8,45 @@
 </node> -->
 
 
-<node pkg="grasp_estimator" name="grasp_state_data_server_2" type="grasp_state_data_server_2" respawn="true" output="screen">
+
+
+<node pkg="grasp_estimator" name="grasp_state_data_server_2" type="grasp_state_data_server_2"  output="screen"
+       > <!--respawn="true" launch-prefix="terminator -b -title='Acquiring Server'  -new-tab -execute "-->
 </node> 
+<!-- 
+  <node name="joint_state_estimator" pkg="joint_state_estimator" type="joint_state_estimator_node" cwd="node" respawn="false" output="screen" ns="left_arm" >
+    <rosparam command="load" file="$(find grasp_estimator)/config/vito_left_arm_joint_state_estimator_config.yaml" />
+  </node>
+    <node name="test_jointvelacc_filter" pkg="joint_state_estimator" type="test_joint_state_estimator" cwd="node" respawn="false" output="screen" ns="left_arm" /> -->
+  
+<!--  <include file="$(find pacman_vision)/launch/pacman_vision.launch" >  
+	   <arg name="run_rviz" value="false" />  
+	   <arg name="load" value="grasp_estimator"/>
+  </include>-->
 
-  <node pkg="grasp_estimator" name="weight_estimator_server" type="weight_estimator_server" respawn="true" output="screen">
-</node>    
+
+  <node pkg="grasp_estimator" name="weight_estimator_server" type="weight_estimator_server"  output="screen"
+    launch-prefix="terminator --new-tab  --title='Weight Estimator'  --execute  "> <!--respawn="true"-->
+</node>     
+
+<!--     <node pkg="grasp_estimator" name="volume_estimator_server" type="volume_estimator_server"  output="screen"
+        "> 
+     </node>-->   
  
-<!--    <node pkg="grasp_estimator" name="grasp_shape_estimator_server" type="grasp_shape_estimator_server" respawn="true" output="screen">
-</node>  -->    
+    <node pkg="grasp_estimator" name="grasp_shape_estimator_server" type="grasp_shape_estimator_server" output="screen"
+      launch-prefix="terminator --new-tab --title='Grasp Shape Estimator'  --execute  "> <!-- respawn="true"-->
+    </node>     
 
-
+   
+  <node launch-prefix="terminator --new-tab --title='Cog Estimator'  --execute"  name="cog_estimator_server" pkg="grasp_estimator" type="cog_estimator_server" respawn="false" output="screen">
+    <rosparam command="load" file="$(find grasp_estimator)/config/vito_left_arm_ft_calib.yaml"/>
+  </node>
+    <node 
+      launch-prefix="terminator --new-tab --title='Object Recognition'  --execute"  
+      name="object_clustering_recognition_server" pkg="grasp_estimator" type="object_clustering_recognition_server" respawn="false" output="screen">
+<!--      <rosparam command="load" file="$(find grasp_estimator)/config/object_clustering_recognition_params.yaml"/>  -->
+       <rosparam command="load" file="$(find grasp_estimator)/exp/yaml/centroid.yaml"/>  
+      <rosparam command="load" file="$(find grasp_estimator)/exp/yaml/database.yaml"/>  
+  </node>
 
 </launch>

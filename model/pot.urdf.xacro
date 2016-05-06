@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="pot">
+
+	<xacro:macro name="cylinder_inertia_def" params="radius length mass">
+	<inertia ixx="${mass * (3 * radius * radius + length * length) / 12}"
+			 iyy="${mass * (3 * radius * radius + length * length) / 12}"
+			 izz="${mass * radius* radius / 2}"
+			 ixy="0" iyz="0" ixz="0"/>
+	</xacro:macro>
+
+	<link name="pot">
+	    <material>Gazebo/Blue</material>
+		<inertial>
+
+
+				<mass value="7.5"/>
+				<!--<origin xyz="0 0 0.005"/>
+				<xacro:cylinder_inertia_def radius="0.035" length="0.015" mass="5.0" />-->
+				<origin xyz="0 0 -0.05" rpy="0 0 -1.57"/>
+				<xacro:cylinder_inertia_def radius="0.05" length="0.10" mass="7.5" />
+				
+		</inertial>
+		<visual>
+			<!--<origin xyz="0 0 0.0075" rpy="0 0 0"/>-->
+		        <origin xyz="0 0 -0.05" rpy="0 0 -1.57"/>
+			<geometry>
+			          <mesh filename="package://asus_scanner_models/pot/pot.stl" scale="1.0 1.0 1.0"/>
+				<!--<cylinder length="0.015" radius="0.035"/>-->
+			</geometry>
+		</visual>
+		<collision>
+			<!--<origin xyz="0 0 0.0075" rpy="0 0 0"/>-->
+			<origin xyz="0 0 -0.05" rpy="0 0 -1.57"/>
+			<geometry>
+				<!--<cylinder length="0.015" radius="0.035"/>-->
+			        <mesh filename="package://asus_scanner_models/pot/pot.stl" scale="1.0 1.0 1.0"/>
+			</geometry>
+		</collision>
+	</link>
+
+	<gazebo reference="pot"> 
+	    <material>Gazebo/Blue</material>
+		  <selfCollide>true</selfCollide> 
+		 <maxContacts>100</maxContacts>
+	     <!-- <provideFeedback>true</provideFeedback>  -->
+	     <gravity>true</gravity>
+	     
+		<!-- <mu1>0.6</mu1>
+	     <mu2>0.6</mu2> 
+	    -->  
+	    <mu1>0.5</mu1>
+	     <mu2>0.5</mu2> 
+	   
+	        <fdir1>1 0 0</fdir1>
+         <maxVel>1.0</maxVel>
+
+		<kp>1000000000000.0</kp>
+	  <kd>100.0</kd>
+	  <minDepth>0.00</minDepth>
+	 </gazebo>
+
+</robot>

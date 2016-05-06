@@ -1,0 +1,125 @@
+
+# Name of the data file
+data_file_name: 'database.yaml'
+
+# Name of the centroid file
+centroid_file_name: 'centroid.yaml'
+
+## Name of file to store data in txt
+data_file_name_txt: 'data.txt'
+
+# For Pacman Head pc
+# Name of the directory for data
+data_file_dir: '/home/pacman/Projects/catkin_ws/src/grasp_estimator/exp/yaml'
+
+centroid_file_dir: '/home/pacman/Projects/catkin_ws/src/grasp_estimator/exp/yaml'
+
+## Name of the directory to store data in txt
+data_file_name_txt_dir: '/home/pacman/Projects/catkin_ws/src/grasp_estimator/exp/txt'
+
+#for my pc 
+# Name of the directory for data
+#data_file_dir: '/home/pc/catkin_ws/src/grasp_estimator/exp/yaml'
+
+#centroid_file_dir: '/home/pc/catkin_ws/src/grasp_estimator/exp/yaml'
+
+
+# Name of the directory to store data in txt for pacman head pc
+#data_file_name_txt_dir: '/home/pacman/Projects/catkin_ws/src/grasp_estimator/exp/txt'
+
+# Name of the directory to store data in txt for my pc
+#data_file_name_txt_dir: '/home/pc/catkin_ws/src/grasp_estimator/exp/txt'
+
+# recalculate centroid each time a new data arrives
+recalculate_centroid: true
+
+# create header
+create_header: false
+
+
+# count object type
+count_object_type: 3
+
+object_name: ["mug" , "pot", "bowl" ]
+
+## count grasp type for each object
+#grasp_type_object_0: 3
+## count of experiments for each grasp
+#count_exp_mug_grasp_0: 2
+#count_exp_mug_grasp_1: 2
+#count_exp_mug_grasp_2: 2
+
+
+#grasp_type_object_1: 3
+## count of experiments for each grasp
+#count_exp_pot_grasp_0: 2
+#count_exp_pot_grasp_1: 2
+#count_exp_pot_grasp_2: 2
+
+#grasp_type_object_2: 3
+## count of experiments for each grasp
+#count_exp_bowl_grasp_0: 2
+#count_exp_bowl_grasp_1: 2
+#count_exp_bowl_grasp_2: 2
+
+#count_centroid: 9
+
+## count of experiments for each grasp
+#centroid_mug_grasp_0: 1
+#centroid_mug_grasp_1: 1
+#centroid_mug_grasp_2: 1
+
+
+## count of experiments for each grasp
+#centroid_pot_grasp_0: 1
+#centroid_pot_grasp_1: 1
+#centroid_pot_grasp_2: 1
+
+## count of experiments for each grasp
+#centroid_bowl_grasp_0: 1
+#centroid_bowl_grasp_1: 1
+#centroid_bowl_grasp_2: 1
+
+
+# count grasp type for each object
+grasp_type_object_0: 3
+# count of experiments for each grasp
+count_exp_mug_grasp_0: 2
+count_exp_mug_grasp_1: 0
+count_exp_mug_grasp_2: 0
+
+
+grasp_type_object_1: 3
+# count of experiments for each grasp
+count_exp_pot_grasp_0: 0
+count_exp_pot_grasp_1: 0
+count_exp_pot_grasp_2: 0
+
+grasp_type_object_2: 3
+# count of experiments for each grasp
+count_exp_bowl_grasp_0: 0
+count_exp_bowl_grasp_1: 0
+count_exp_bowl_grasp_2: 0
+
+count_centroid: 9
+
+# count of experiments for each grasp
+centroid_mug_grasp_0: 0
+centroid_mug_grasp_1: 0
+centroid_mug_grasp_2: 0
+
+
+# count of experiments for each grasp
+centroid_pot_grasp_0: 0
+centroid_pot_grasp_1: 0
+centroid_pot_grasp_2: 0
+
+# count of experiments for each grasp
+centroid_bowl_grasp_0: 0
+centroid_bowl_grasp_1: 0
+centroid_bowl_grasp_2: 0
+
+
+
+
+

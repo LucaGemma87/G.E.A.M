@@ -3,49 +3,59 @@
 
 	<xacro:macro name="cylinder_inertia_def" params="radius length mass">
 	<inertia ixx="${mass * (3 * radius * radius + length * length) / 12}"
-			 iyy="${mass * radius* radius / 2}"
-			 izz="${mass * (3 * radius * radius + length * length) / 12}"
+			 iyy="${mass * (3 * radius * radius + length * length) / 12}"
+			 izz="${mass * radius* radius / 2}"
 			 ixy="0" iyz="0" ixz="0"/>
 	</xacro:macro>
 
-	<link name="cylinder">
+	<link name="object_link" type="fixed">
+	    <material>Gazebo/Blue</material>
 		<inertial>
 
-			<!-- cylindrical shell : Izz=m*r^2; Ixx=Iyy=1/12*m*(6*r^2+h^2) -->
-			<!-- solid cylinder : Izz=(m*r^2)/2; Ixx=Iyy=1/12*m*(3*r^2+h^2) -->
-			<!-- <inertia  ixx="0.002385" ixy="0.00"  ixz="0.00" iyy="0.002385" iyz="0.00" izz="0.00027" /> -->
 
-				<mass value="1.0"/>
-				<origin xyz="0 0 0.006"/>
-				<xacro:cylinder_inertia_def radius="0.035" length="0.012" mass="1.0" />
+				<mass value="4.0"/>
+				<!--<origin xyz="0 0 0.005"/>
+				<xacro:cylinder_inertia_def radius="0.035" length="0.015" mass="5.0" />-->
+				<origin xyz="0 0 0.15" rpy="0 0 0"/>
+				<xacro:cylinder_inertia_def radius="0.03" length="0.30" mass="4.0" />
+				
 		</inertial>
 		<visual>
-			<origin xyz="0 0 0.006" rpy="0 0 0"/>
+			<origin xyz="0 0 0.15" rpy="0 0 0"/>
+ 		       
 			<geometry>
-				<cylinder length="0.012" radius="0.035"/>
+			      
+				<cylinder length="0.30" radius="0.03"/>
 			</geometry>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0.006" rpy="0 0 0"/>
+			<origin xyz="0 0 0.15" rpy="0 0 0"/>
+			
 			<geometry>
-				<cylinder length="0.012" radius="0.035"/>
+				<cylinder length="0.30" radius="0.03"/>
+			       
 			</geometry>
 		</collision>
 	</link>
 
-	<gazebo reference="cylinder"> 
+	<gazebo reference="object_link"> 
+	    <material>Gazebo/Blue</material>
 		  <selfCollide>true</selfCollide> 
 		 <maxContacts>100</maxContacts>
 	     <!-- <provideFeedback>true</provideFeedback>  -->
 	     <gravity>true</gravity>
 	     
-		<mu1>0.6</mu1>
+		<!-- <mu1>0.6</mu1>
 	     <mu2>0.6</mu2> 
+	    -->  
+	    <mu1>0.6</mu1>
+	     <mu2>0.6</mu2> 
+	   
 	        <fdir1>1 0 0</fdir1>
          <maxVel>1.0</maxVel>
 
-		<kp>1000000000.0</kp>
-	  <kd>1000.0</kd>
+		<kp>1000000000000.0</kp>
+	  <kd>100000.0</kd>
 	  <minDepth>0.00</minDepth>
 	 </gazebo>
 

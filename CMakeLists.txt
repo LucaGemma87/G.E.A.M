@@ -7,12 +7,16 @@ project(grasp_estimator)
 find_package(catkin REQUIRED COMPONENTS
   roscpp rospy std_msgs  message_generation tf  gencpp  geneus  genlisp  genpy
   sensor_msgs geometry_msgs shape_msgs visualization_msgs urdf moveit_core moveit_ros_planning 
-  moveit_ros_planning_interface pluginlib moveit_msgs control_msgs gazebo_msgs 
+  moveit_ros_planning_interface pluginlib moveit_msgs control_msgs gazebo_msgs  cmake_modules tf_conversions eigen_conversions
+  #opencv
 )
+find_package(Eigen REQUIRED)
+find_package(Boost REQUIRED system filesystem date_time thread)
 
+#find_package(OpenCV 3.1 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
+#find_package(Boost REQUIRED COMPONENTS system)
 
 #find_package(PkgConfig REQUIRED)
 
@@ -53,6 +57,8 @@ add_message_files(
    DataAcquired.msg
    WeightEstimated.msg
    GraspShape.msg
+   VolumeEstimated.msg
+   ObjectRecognition.msg
  )
 
 
@@ -71,8 +77,7 @@ generate_messages(
  std_msgs
   sensor_msgs
   gazebo_msgs
- 
- )
+)
 
 
 ## Generate actions in the 'action' folder
@@ -115,9 +120,59 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES grasp_estimator
-  CATKIN_DEPENDS roscpp rospy std_msgs  message_runtime
-  DEPENDS system_lib grasp_estimator gazebo
+  CATKIN_DEPENDS roscpp rospy std_msgs  message_runtime sensor_msgs tf geometry_msgs moveit_core moveit_ros_planning moveit_ros_planning_interface eigen tf_conversions eigen_conversions
+  DEPENDS system_lib grasp_estimator gazebo eigen
 )
+
+
+
+#find_package(PCL 1.8 REQUIRED)
+find_package(PCL 1.7 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
+
+find_package(GSL 2.1 REQUIRED)
+include_directories(${GSL_INCLUDE_DIRS})
+link_directories(${GSL_LIBRARY_DIRS})
+add_definitions(${GSL_DEFINITIONS})
+
+
+find_package(dlib REQUIRED)
+include_directories(${DLIB_INCLUDE_DIRS})
+link_directories(${DLIB_LIBRARY_DIRS})
+add_definitions(${DLIB_DEFINITIONS})
+
+
+
+# include_directories(${FLANN_INCLUDE_DIRS})
+# link_directories(${FLANN_LIBRARY_DIRS})
+# add_definitions(${FLANN_DEFINITIONS})
+
+find_package(PkgConfig)
+pkg_check_modules(PC_FLANN flann)
+set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
+
+find_path(FLANN_INCLUDE_DIR flann/flann.hpp
+    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
+
+find_library(FLANN_LIBRARY flann
+    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
+
+set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
+set(FLANN_LIBRARIES ${FLANN_LIBRARY})
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Flann DEFAULT_MSG
+    FLANN_LIBRARY FLANN_INCLUDE_DIR)
+
+mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
+
+find_package(HDF5 REQUIRED)
+include_directories(${HDF5_INCLUDE_DIRS})
+
+
 
 ###########
 ## Build ##
@@ -127,15 +182,19 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 
-include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} gazebo /home/pacman/Projects/gsl/include )
+#   include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS}  
+#    ${EIGEN_INCLUDE_DIRS} gazebo gsl-2.1 dlib LAPACK BLAS) #for my pc 
+  include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS}   ${Boost_INCLUDE_DIRS}
+    ${EIGEN_INCLUDE_DIRS} gazebo /home/pacman/Projects/gsl/include dlib LAPACK BLAS) # for pacman head pc 
 
 
 
 #link_directories(${GSL_LIBRARY_DIRS})
-link_directories(BEFORE /home/pacman/Projects/gsl/lib)
-
+# for pacman head pc : 
+link_directories(BEFORE /home/pacman/Projects/gsl/lib ) #for pacman head
+#link_directories(BEFORE /usr/local/lib  ) #for my pc 
 ## Declare a C++ library
-# add_library(grasp_estimator
+# # add_library(grasp_estimator
 #   src/${PROJECT_NAME}/grasp_estimator.cpp
 # )
 
@@ -167,9 +226,15 @@ add_executable(test_object_in_hand_left_arm_planning_node src/test_object_in_han
 # add_executable(test_data_acquiring src/test_data_acquiring.cpp)
 # add_executable(grasp_state_data_server src/grasp_state_data_server.cpp)
 add_executable(grasp_state_data_server_2 src/grasp_state_data_server_2.cpp)
-add_executable(weight_estimator_server src/weight_estimation.cpp)
+#add_executable(weight_estimator_server src/weight_estimation.cpp)
+add_executable(weight_estimator_server src/hand_control.cpp)
 add_executable(grasp_shape_estimator_server src/grasp_shape_estimation.cpp)
-
+add_executable(volume_estimator_server src/volume_estimation.cpp)
+add_executable(wrench_estimator_server src/wrench_estimation.cpp)
+add_executable(twist_estimator_server src/twist_estimation.cpp)
+add_executable(object_clustering_recognition_server src/object_clustering_recognition.cpp)
+add_executable(offline_object_clustering_recognition_server src/offline_object_clustering_recognition.cpp)
+add_executable(multi_test_offline_object_clustering_recognition_server src/multi_test_offline_object_clustering_recognition.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -188,7 +253,12 @@ add_dependencies(test_object_in_hand_left_arm_planning_node ${${PROJECT_NAME}_EX
 add_dependencies(grasp_state_data_server_2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(weight_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
 add_dependencies(grasp_shape_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp gls)
-
+add_dependencies(volume_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(wrench_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(twist_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+add_dependencies(object_clustering_recognition_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp ${BLAS_EXPORTED_TARGETS} ${LAPACK_EXPORTED_TARGETS} })
+add_dependencies(offline_object_clustering_recognition_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp ${BLAS_EXPORTED_TARGETS} ${LAPACK_EXPORTED_TARGETS} })
+add_dependencies(multi_test_offline_object_clustering_recognition_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp ${BLAS_EXPORTED_TARGETS} ${LAPACK_EXPORTED_TARGETS} })
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(right_arm_planning_node    ${catkin_LIBRARIES}   )
  target_link_libraries(left_arm_planning_node    ${catkin_LIBRARIES}   )
@@ -203,6 +273,12 @@ add_dependencies(grasp_shape_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS
     target_link_libraries(grasp_state_data_server_2  ${catkin_LIBRARIES})
     target_link_libraries(weight_estimator_server ${catkin_LIBRARIES} gsl gslcblas)
  target_link_libraries(grasp_shape_estimator_server ${catkin_LIBRARIES} gsl gslcblas)
+ target_link_libraries(volume_estimator_server ${catkin_LIBRARIES} ${PCL_LIBRARIES}) 
+  target_link_libraries(wrench_estimator_server ${catkin_LIBRARIES}) 
+    target_link_libraries(twist_estimator_server ${catkin_LIBRARIES}) 
+    target_link_libraries(object_clustering_recognition_server ${catkin_LIBRARIES} ${dlib_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}  ${FLANN_LIBRARIES} ${HDF5_LIBRARIES}) 
+     target_link_libraries(offline_object_clustering_recognition_server ${catkin_LIBRARIES} ${dlib_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${FLANN_LIBRARIES} ${HDF5_LIBRARIES}) 
+       target_link_libraries(multi_test_offline_object_clustering_recognition_server ${catkin_LIBRARIES} ${dlib_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${FLANN_LIBRARIES} ${HDF5_LIBRARIES})    
 
 ############# ${GSL_LIBRARIES}
 ## Install ##
@@ -253,4 +329,21 @@ add_dependencies(grasp_shape_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+## for COG estimation server
+
+
+
+add_executable(cog_estimator_server src/ft_sensor_calib.cpp src/cog_estimation.cpp)
+add_dependencies(cog_estimator_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} grasp_estimator_genlisp grasp_estimator_gen_cpp)
+target_link_libraries(cog_estimator_server ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+
+install(TARGETS cog_estimator_server
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY config include launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 

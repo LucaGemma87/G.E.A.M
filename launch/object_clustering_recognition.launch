@@ -1,0 +1,10 @@
+<launch>
+    
+  <node  name="object_clustering_recognition_server" pkg="grasp_estimator" type="object_clustering_recognition_server" respawn="false"
+  output="screen"> 
+  <rosparam command="load" file="$(find grasp_estimator)/exp/yaml/database.yaml"/>  
+ 
+  </node>
+
+
+</launch>

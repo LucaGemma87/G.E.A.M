@@ -1,5 +1,10 @@
 <launch>
 <!-- Spawn a robot into Gazebo -->
-    <param name="box_description" command="$(find xacro)/xacro.py $(find grasp_estimator)/model/box.urdf.xacro" />
-    <node name="box_spawner" pkg="gazebo_ros" type="spawn_model" args="-param box_description -urdf -model box -x -0.81 -y -0.26 -z 1.15 -R 0 -P 0 -Y -0.9" respawn="false" output="screen"/>
+  <param name="box_description" command="$(find xacro)/xacro.py $(find grasp_estimator)/model/box.urdf.xacro" />
+    <node name="box_spawner" pkg="gazebo_ros" type="spawn_model" args="-param box_description -urdf -model box -x -0.97 -y -0.31 -z 1.17 -R 0 -P 0 -Y -2.45" respawn="false" output="screen"/> 
 </launch>
+ 
+
+
+
+<!--  -Y-0.78 -->

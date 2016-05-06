@@ -1,0 +1,7 @@
+<launch>
+<!-- Spawn a robot into Gazebo -->
+    <param name="jug_description" command="$(find xacro)/xacro.py $(find grasp_estimator)/model/jug.urdf.xacro" />
+
+   <node name="jug_spawner" pkg="gazebo_ros" type="spawn_model" args="-param jug_description -urdf -model jug -x -0.97 -y -0.28 -z 1.27 -R 0 -P 0 -Y 0" respawn="false" output="screen"/> 
+
+</launch>

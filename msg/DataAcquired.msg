@@ -10,8 +10,6 @@ time time_now
 
 sensor_msgs/JointState hand_joint_curr_state
 
-
-
 # Hand to vito anchor trasform
 
 # index

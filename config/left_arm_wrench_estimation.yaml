@@ -1,0 +1,13 @@
+chain_tip_frame: left_arm_7_link
+chain_root_frame: left_arm_base_link
+
+#chain_tip_frame:  lwr_7_link
+#chain_root_frame:  lwr_base_link
+
+# coefficients for 2nd order butterworth LPF
+filter_coeff_b_effort: [0.0201,    0.0402,    0.0201]
+filter_coeff_a_effort: [1.0000,   -1.5610,    0.6414]
+filter_coeff_b_vel: [0.0201,    0.0402,    0.0201]
+filter_coeff_a_vel: [1.0000,   -1.5610,    0.6414]
+
+loop_frequency: 100

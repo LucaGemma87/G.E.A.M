@@ -13,14 +13,14 @@
 #include <tf/transform_datatypes.h>
 
 #include "grasp_estimator/DataAcquiring.h"
-
+#include "grasp_estimator/WeightEstimated.h"
 #include "grasp_estimator/GraspShape.h"
 
 // ROS headers
 #include <ros/ros.h>
 
 // ROS Control
-#include "control_msgs/JointTrajectoryControllerState.h"
+//#include "control_msgs/JointTrajectoryControllerState.h"
 
 //Message filters
 
@@ -42,14 +42,14 @@
 
 // marker
 #include <visualization_msgs/Marker.h>
-
+#include <std_srvs/Empty.h>
 
 //#include <gsl/gsl_multifit.h>
 
 /* number of data points to fit */
 #define N 19
 #define pi 3.14
-#define Hz 50
+#define Hz 20
 
 namespace grasp_estimator
 {
@@ -72,12 +72,16 @@ private:
 
   ros::Publisher pub_hand_link_position_;
 
+
+
   // marker pubblisher
   
   ros::Publisher marker_pub_;
 
     // subscribers
   ros::Subscriber msg_grasp_state_now_;
+
+  ros::Subscriber hand_move_sub;
    
     //msgs definition
   grasp_estimator::DataAcquired msg_data_acquired_;
@@ -85,9 +89,16 @@ private:
   grasp_estimator::DataAcquired msg_data_acquired_now;
     
   grasp_estimator::GraspShape grasp_shape_estimate_now;
+
+    /// declaration of service servers
+    ros::ServiceServer srvServer_Start_;
+    ros::ServiceServer srvServer_Stop_;
  
 
 public:
+
+      bool run_state;
+      bool hand_stopped;
   // callback functions
       //double sign(double number);
       void grasp_shape_estimation_server(const grasp_estimator::DataAcquired::ConstPtr &msg_data_acquired_);
@@ -100,6 +111,13 @@ public:
       static int ellissoid_df(const gsl_vector * x, void *data_3d,gsl_matrix * J);
       static int plane_f(const gsl_vector *x, void *data_3d, gsl_vector *f);
       static int plane_df(const gsl_vector * x, void *data_3d,gsl_matrix * J);
+
+      bool srvCallback_Start(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+      bool srvCallback_Stop(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);  
+
+        
+      void take_hand_stopped(const grasp_estimator::WeightEstimated::ConstPtr &mass_now);
+
       //static int expb_df(const gsl_vector * x, void *data,gsl_matrix * J);
   // constructor
   Grasp_Shape_Estimator_Server(ros::NodeHandle nh) : 
@@ -107,16 +125,22 @@ public:
         priv_nh_("~")
   {
         
-        msg_grasp_state_now_ = nh_.subscribe<grasp_estimator::DataAcquired>(nh_.resolveName("/left_hand/grasp_state_data_server_"),5,
+        msg_grasp_state_now_ = nh_.subscribe<grasp_estimator::DataAcquired>(nh_.resolveName("/left_hand/grasp_state_data_server_"),10,
                                                                                      &Grasp_Shape_Estimator_Server::grasp_shape_estimation_server,
                                                                                      this);
-        
+
+        hand_move_sub=nh_.subscribe(nh_.resolveName("/left_hand/mass_estimator_server_"),1,&Grasp_Shape_Estimator_Server::take_hand_stopped,this);
+    srvServer_Start_ = nh_.advertiseService("/Grasp_Shape_Estimator_Server/start", &Grasp_Shape_Estimator_Server::srvCallback_Start,this);
+    srvServer_Stop_ = nh_.advertiseService("/Grasp_Shape_Estimator_Server/stop", &Grasp_Shape_Estimator_Server::srvCallback_Stop, this);
     // advertise topics
-    pub_shape_grasp_states_ = nh_.advertise<grasp_estimator::GraspShape>(nh_.resolveName("/left_hand/grasp_shape_estimator_server_"), 5);
+    pub_shape_grasp_states_ = nh_.advertise<grasp_estimator::GraspShape>(nh_.resolveName("/left_hand/grasp_shape_estimator_server_"), 10);
   
-    pub_hand_link_position_ = nh_.advertise<geometry_msgs::PointStamped>(nh_.resolveName("/left_hand/hand_link_server"), 19);
+     pub_hand_link_position_ = nh_.advertise<geometry_msgs::PointStamped>(nh_.resolveName("/left_hand/hand_link_server"), 10);
     
-    marker_pub_= nh_.advertise<visualization_msgs::Marker>(nh_.resolveName( "/left_hand/shape_markers"), 5);
+    marker_pub_= nh_.advertise<visualization_msgs::Marker>(nh_.resolveName( "/left_hand/shape_markers"), 10);
+   
+   run_state=false; 
+   hand_stopped=false;
   }
 
   //! Empty stub
@@ -124,6 +148,26 @@ public:
 
 };
 
+
+  bool Grasp_Shape_Estimator_Server::srvCallback_Start(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+    {
+      ROS_INFO("Starting Grasp_Shape_Estimator_Server");
+      run_state = true;
+      
+    }
+
+
+   bool Grasp_Shape_Estimator_Server::srvCallback_Stop(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+    {
+      ROS_INFO("Stopping Grasp_Shape_Estimator_Server");
+        run_state = false;
+       
+    }
+
+  void Grasp_Shape_Estimator_Server::take_hand_stopped(const grasp_estimator::WeightEstimated::ConstPtr &mass_now)
+{
+   hand_stopped = mass_now->hand_stopped;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// GSL ////////////////////////////////////////////////////////
@@ -548,10 +592,11 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
      (this->msg_data_acquired_now.hand_index_distal_link.transform.rotation.x!=0     )    &&
      (this->msg_data_acquired_now.hand_index_distal_link.transform.rotation.y!=0     )    &&
      (this->msg_data_acquired_now.hand_index_distal_link.transform.rotation.z!=0     )    &&
-     (this->msg_data_acquired_now.hand_index_distal_link.transform.rotation.w!=0     )    )
+     (this->msg_data_acquired_now.hand_index_distal_link.transform.rotation.w!=0     )  )
                                                                                       
 
-  {  
+  { 
+   if(run_state==true&&hand_stopped==true){ 
    grasp_estimator::GraspShape grasp_shape; 
   //ROS_INFO("<--------Grasp Shape Estimator START-------->\n");
  
@@ -976,7 +1021,8 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
   gsl_vector_view x_cyl = gsl_vector_view_array(x_init_cyl, p_cyl);
     for (i = 0; i < n; i++)
     {
-      weights_cyl[i] = 1.0 / (0.27*0.27);
+      weights_cyl[i] = 1.0 / (0.35*0.35);
+      //weights_cyl[i] = 1.0 / (0.27*0.27);
       //weights_cyl[i] = 1.0 / (0.1*0.1);
     }; 
   gsl_vector_view w_cyl = gsl_vector_view_array(weights_cyl, n);
@@ -1114,7 +1160,9 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
   gsl_vector_view x_ell = gsl_vector_view_array(x_init_ell, p_ell);
     for (i = 0; i < n; i++)
     {
-      weights_ell[i] = 1.0 / (0.11*0.11);
+      //weights_ell[i] = 1.0 / (0.11*0.11);
+      weights_ell[i] = 1.0 / (0.2*0.2);
+      
     }; 
   gsl_vector_view w_ell = gsl_vector_view_array(weights_ell, n);
   const gsl_rng_type * type_ell;
@@ -1544,6 +1592,7 @@ void Grasp_Shape_Estimator_Server::grasp_shape_estimation_server(const grasp_est
 
 
   //ROS_INFO(">--------Grasp Shape Estimator END----------<\n");
+  }
  }
  else{ROS_ERROR("No data");}
 }
@@ -1565,12 +1614,13 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "Grasp_Shape_Estimator_Server");
     
   ros::NodeHandle nh;
+  ros::AsyncSpinner spinner(4); 
   grasp_estimator::Grasp_Shape_Estimator_Server Grasp_Shape_Estimator_Server(nh);
     
     ROS_INFO("Grasp_Shape_Estimator_Server is Here !!!");
     //int index=(int)0;
   //ros::Rate loop_rate(Hz);
-  ros::AsyncSpinner spinner(4); 
+  
   spinner.start();
   while (ros::ok())
   {

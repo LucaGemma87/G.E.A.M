@@ -1,0 +1,8 @@
+<launch>
+
+  <node name="cog_estim" pkg="grasp_estimator" type="cog_estimator_server"  respawn="false" output="screen">
+    <rosparam command="load" file="$(find grasp_estimator)/config/vito_left_arm_ft_calib.yaml"/>
+  </node>
+
+
+</launch>

@@ -1,0 +1,382 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Status1
+        - /Imu1
+        - /Imu1/Box properties1
+        - /Imu1/Axes properties1
+        - /Imu1/Acceleration properties1
+        - /TF1/Frames1
+        - /WrenchStamped2
+      Splitter Ratio: 0.755034
+    Tree Height: 595
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.588679
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: ""
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Alpha: 0.5
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        box_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        box_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_1_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_2_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_3_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_3_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_4_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_4_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_5_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_5_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_6_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_6_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_7_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_7_link_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lwr_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_imu_measure:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_measure:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lwr_palm_dummy_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Name: RobotModel
+      Robot Description: robot_description
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Arrow Width: 0.25
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.02
+      Force Color: 204; 51; 51
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /left_arm_wrench_estimation/filtered_wrench
+      Torque Arrow Scale: 0.2
+      Torque Color: 204; 204; 51
+      Value: true
+    - Acceleration properties:
+        Acc. vector alpha: 0.5
+        Acc. vector color: 0; 0; 255
+        Acc. vector scale: 0.05
+        Derotate acceleration: false
+        Enable acceleration: true
+      Axes properties:
+        Axes scale: 0.05
+        Enable axes: false
+      Box properties:
+        Box alpha: 1
+        Box color: 85; 0; 255
+        Enable box: false
+        x_scale: 0.05
+        y_scale: 0.05
+        z_scale: 0.05
+      Class: rviz_imu_plugin/Imu
+      Enabled: true
+      Name: Imu
+      Topic: /lwr/lwr/imu
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /cog_pub_
+      Name: Marker
+      Namespaces:
+        vito_wrench_estimation: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        box:
+          Value: true
+        box_2:
+          Value: true
+        box_3:
+          Value: true
+        lwr_1_link:
+          Value: true
+        lwr_1_link_dummy:
+          Value: true
+        lwr_2_link:
+          Value: true
+        lwr_2_link_dummy:
+          Value: true
+        lwr_3_link:
+          Value: true
+        lwr_3_link_dummy:
+          Value: true
+        lwr_4_link:
+          Value: true
+        lwr_4_link_dummy:
+          Value: true
+        lwr_5_link:
+          Value: true
+        lwr_5_link_dummy:
+          Value: true
+        lwr_6_link:
+          Value: true
+        lwr_6_link_dummy:
+          Value: true
+        lwr_7_link:
+          Value: true
+        lwr_7_link_dummy:
+          Value: true
+        lwr_base:
+          Value: true
+        lwr_base_link:
+          Value: true
+        lwr_imu_measure:
+          Value: true
+        lwr_measure:
+          Value: true
+        lwr_palm_dummy_link:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 0.2
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree:
+        world:
+          box:
+            lwr_base_link:
+              lwr_1_link:
+                lwr_2_link:
+                  lwr_3_link:
+                    lwr_4_link:
+                      lwr_5_link:
+                        lwr_6_link:
+                          lwr_7_link:
+                            lwr_base:
+                              lwr_imu_measure:
+                                {}
+                              lwr_measure:
+                                box_2:
+                                  box_3:
+                                    {}
+                            lwr_palm_dummy_link:
+                              {}
+                          lwr_7_link_dummy:
+                            {}
+                        lwr_6_link_dummy:
+                          {}
+                      lwr_5_link_dummy:
+                        {}
+                    lwr_4_link_dummy:
+                      {}
+                  lwr_3_link_dummy:
+                    {}
+                lwr_2_link_dummy:
+                  {}
+              lwr_1_link_dummy:
+                {}
+      Update Interval: 0
+      Value: true
+    - Alpha: 1
+      Arrow Width: 0.25
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.025
+      Force Color: 204; 51; 51
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /lwr/ft_sensor_topic
+      Torque Arrow Scale: 0.25
+      Torque Color: 204; 204; 51
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: box
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 2.95989
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0.143227
+        Y: 0.894855
+        Z: 0.896188
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.915397
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 5.3586
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 876
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd00000004000000000000013c000002e2fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000028000002e2000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000002e2fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730100000028000002e2000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000005ff0000003efc0100000002fb0000000800540069006d00650100000000000005ff000002f600fffffffb0000000800540069006d00650100000000000004500000000000000000000003a8000002e200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1535
+  X: 55
+  Y: -14

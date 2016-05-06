@@ -1,0 +1,40 @@
+# main loop frequency [Hz] (should be as fast as F/T sensor publish frequency)
+loop_rate: 1000.0
+
+# waiting time after moving to each pose before taking F/T measurements
+wait_time: 10.0
+
+# Name of the moveit group
+moveit_group_name: "left_hand_arm"
+
+# Name of the calib file
+calib_file_name: 'vito_left_arm_ft_calib_data.yaml'
+
+# Name of the directory
+calib_file_dir: '/home/pacman/Projects/catkin_ws/src/grasp_estimator/config'
+
+# Name of file to store measurements
+meas_file_name: 'vito_left_arm_ft_calib_meas.txt'
+
+# Name of the directory
+meas_file_dir: '/home/pacman/Projects/catkin_ws/src/grasp_estimator/config'
+
+# don't execute random poses
+random_poses: false
+
+# number of random poses
+number_random_poses: 1
+
+# frame refered to planning
+poses_frame_id: "vito_anchor"
+
+#pose for identification of hand plus object
+pose0: "left_hand_arm_exp"
+pose1: "left_hand_arm_exp_1"
+
+
+
+
+
+
+

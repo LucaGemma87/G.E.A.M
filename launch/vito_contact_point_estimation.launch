@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+   
+<!--  <include file="$(find grasp_estimator)/launch/twist_estimator.launch" >  
+  </include>-->
+  
+  
+<!--  <include file="$(find gravity_compensation)/launch/vito_gravity_compensation.launch" >  	  
+  </include>-->
+  
+  <arg name="ft_sensor_topic" default="/contact_point_estimation/ft_compensated"/>
+
+  
+  <node name="contact_point_estimation" pkg="contact_point_estimation" type="contact_point_estimation_node" cwd="node" respawn="false" output="screen" >
+    <rosparam command="load" file="$(find contact_point_estimation)/config/contact_point_estimator.yaml"/>
+    <rosparam command="load" file="$(find contact_point_estimation)/config/surface_normal_estimator.yaml"/>
+    <remap from="/left_ft_sensor/left/force_torque_sensor_filtered" to="$(arg ft_sensor_topic)"/>
+  </node>
+
+</launch>

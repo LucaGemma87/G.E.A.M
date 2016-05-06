@@ -17,3 +17,6 @@ left_arm:
 
 to use target_pose planning in right_arm_planning
 
+
+// to launch with real robot
+roslaunch vito_description display.launch left_arm_enabled:=true use_robot_sim:=false use_calibration_package:=false

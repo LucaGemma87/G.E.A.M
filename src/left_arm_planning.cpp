@@ -213,6 +213,7 @@ bool Left_arm_planner::serviceCallback(grasp_estimator::ArmPlanning::Request &re
     group.setPoseTarget(target_pose);
     ROS_INFO("Planning position Target");
     group.setPlanningTime((double)5);
+     
     group.setGoalOrientationTolerance((double)0.005); 
     group.setGoalPositionTolerance((double)0.005); 
     

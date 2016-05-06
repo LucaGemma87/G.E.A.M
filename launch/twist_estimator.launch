@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="left_arm_twist_estimation" pkg="grasp_estimator" type="twist_estimator_server" cwd="node" respawn="false" output="screen">
+    <rosparam command="load" file="$(find grasp_estimator)/config/left_arm_twist_estimation.yaml"/>
+     <!--remap from="l_arm_wrench_estimation/controller_state" to="/l_arm_vel/state"/-->
+  </node>
+
+</launch>

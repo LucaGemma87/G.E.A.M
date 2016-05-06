@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+   <node name="joint_state_estimator" pkg="joint_state_estimator" type="joint_state_estimator_node" cwd="node" respawn="false" output="screen" ns="left_arm" >
+    <rosparam command="load" file="$(find grasp_estimator)/config/vito_left_arm_joint_state_estimator_config.yaml" />
+  </node>
+    <node name="test_jointvelacc_filter" pkg="joint_state_estimator" type="test_joint_state_estimator" cwd="node" respawn="false" output="screen" ns="left_arm" />
+</launch>  
